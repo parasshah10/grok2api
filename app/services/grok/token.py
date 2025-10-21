@@ -56,9 +56,10 @@ class GrokTokenManager:
         # 同步加载初始数据
         self._load_data()
         self._initialized = True
-
+        self.video_token_index = 0
+ 
         logger.debug(f"[Token] 管理器初始化完成，文件: {self.token_file}")
-
+ 
     def set_storage(self, storage) -> None:
         """设置存储实例"""
         self._storage = storage
@@ -169,48 +170,73 @@ class GrokTokenManager:
     
     def select_token(self, model: str) -> str:
         """根据模型类型和剩余次数选择最优Token"""
+        model_info = Models.get_model_info(model)
+        if model_info.get("is_video_model"):
+            active_tokens = [
+                token for token, data in self.token_data[TokenType.NORMAL.value].items()
+                if data.get("status") != "expired"
+            ]
+            
+            if not active_tokens:
+                # Fallback to Super tokens if no normal ones are active
+                active_tokens = [
+                    token for token, data in self.token_data[TokenType.SUPER.value].items()
+                    if data.get("status") != "expired"
+                ]
+
+            if not active_tokens:
+                raise GrokApiException("No active tokens available for video generation.", "NO_AVAILABLE_TOKEN")
+
+            # Select token using round-robin index
+            selected_token = active_tokens[self.video_token_index % len(active_tokens)]
+            
+            # Increment index for the next request
+            self.video_token_index += 1
+            
+            logger.debug(f"[Token] Round-robin selection for video model: Chose token at index {self.video_token_index - 1}")
+            return selected_token
         def select_best_token(tokens_dict: Dict[str, Any]) -> Tuple[Optional[str], Optional[int]]:
             """从 token 字典中选择最佳 token"""
             unused_tokens = []  # remaining = -1 的 token
             used_tokens = []    # remaining > 0 的 token
-
+ 
             for token_key, token_data in tokens_dict.items():
                 # 跳过已失效的Token
                 if token_data.get("status") == "expired":
                     continue
-
+ 
                 remaining = int(token_data.get(remaining_field, -1))
-
+ 
                 # 跳过已限流的 token
                 if remaining == 0:
                     continue
-
+ 
                 # 分类存储
                 if remaining == -1:
                     unused_tokens.append(token_key)
                 elif remaining > 0:
                     used_tokens.append((token_key, remaining))
-
+ 
             # 优先返回尚未使用的 token
             if unused_tokens:
                 return unused_tokens[0], -1
-
+ 
             # 否则返回次数最多的 token
             if used_tokens:
                 used_tokens.sort(key=lambda x: x[1], reverse=True)
                 return used_tokens[0][0], used_tokens[0][1]
-
+ 
             return None, None
-
+ 
         max_token_key = None
         max_remaining = None
-
+ 
         # 深拷贝
         token_data_snapshot = {
             TokenType.NORMAL.value: self.token_data[TokenType.NORMAL.value].copy(),
             TokenType.SUPER.value: self.token_data[TokenType.SUPER.value].copy()
         }
-
+ 
         if model == "grok-4-heavy":
             # grok-4-heavy 只能使用Super Token + heavy remaining queries
             remaining_field = "heavyremainingQueries"
@@ -218,14 +244,14 @@ class GrokTokenManager:
         else:
             # 其他模型使用 remaining Queries
             remaining_field = "remainingQueries"
-
+ 
             # 优先使用普通Token
             max_token_key, max_remaining = select_best_token(token_data_snapshot[TokenType.NORMAL.value])
-
+ 
             # 如果普通Token没有可用的，尝试使用Super Token
             if max_token_key is None:
                 max_token_key, max_remaining = select_best_token(token_data_snapshot[TokenType.SUPER.value])
-
+ 
         if max_token_key is None:
             raise GrokApiException(
                 f"没有可用Token用于模型 {model}",
@@ -236,7 +262,7 @@ class GrokTokenManager:
                     "super_count": len(token_data_snapshot[TokenType.SUPER.value])
                 }
             )
-
+ 
         status_text = "未使用" if max_remaining == -1 else f"剩余{max_remaining}次"
         logger.debug(f"[Token] 为模型 {model} 选择Token ({status_text})")
         return max_token_key

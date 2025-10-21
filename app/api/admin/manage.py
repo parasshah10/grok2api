@@ -6,13 +6,14 @@
 
 import secrets
 import re
+import asyncio
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Depends, Header
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-
+ 
 from app.core.config import setting
 from app.core.logger import logger
 from app.services.grok.token import token_manager
@@ -424,6 +425,37 @@ async def delete_tokens(request: DeleteTokensRequest,
         )
 
 
+@router.post("/api/refresh-limits")
+async def refresh_all_token_limits(_: bool = Depends(verify_admin_session)):
+    """
+    Manually refresh the rate limits for all active tokens.
+    """
+    logger.info("[Admin] Starting manual rate limit refresh for all tokens.")
+    
+    all_tokens = token_manager.get_tokens()
+    tasks = []
+
+    for token_type_str in [TokenType.NORMAL.value, TokenType.SUPER.value]:
+        for token, data in all_tokens[token_type_str].items():
+            if data.get("status") != "expired":
+                auth_token = f"sso-rw={token};sso={token}"
+                # Check standard quota for all active tokens
+                tasks.append(token_manager.check_limits(auth_token, "grok-4-fast"))
+                
+                # Also check heavy quota for Super tokens
+                if token_type_str == TokenType.SUPER.value:
+                    tasks.append(token_manager.check_limits(auth_token, "grok-4-heavy"))
+
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    success_count = sum(1 for r in results if r is not None and not isinstance(r, Exception))
+    failure_count = len(tasks) - success_count
+
+    message = f"Rate limit refresh complete. Successful updates: {success_count}, Failures: {failure_count}."
+    logger.info(f"[Admin] {message}")
+    return {"success": True, "message": message}
+ 
+ 
 @router.get("/api/settings")
 async def get_settings(_: bool = Depends(verify_admin_session)) -> Dict[str, Any]:
     """获取全局配置"""
