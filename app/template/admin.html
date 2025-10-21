@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="h-full">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理控制台 - Grok2API</title>
+    <title>Admin Console - Grok2API</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -48,7 +48,7 @@
                             <span id="storageModeText">FILE</span>
                         </span>
                         <div id="storageModeTooltip" class="hover-card-content top">
-                            加载中...
+                            Loading...
                         </div>
                     </div>
                     <nav class="flex items-center gap-1">
@@ -60,7 +60,7 @@
                         <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                         </svg>
-                        反馈
+                        Feedback
                     </a>
                     <button
                         onclick="logout()"
@@ -71,7 +71,7 @@
                             <polyline points="16 17 21 12 16 7"/>
                             <line x1="21" y1="12" x2="9" y2="12"/>
                         </svg>
-                        退出
+                        Logout
                     </button>
                 </nav>
             </div>
@@ -82,8 +82,9 @@
         <!-- Tab 导航 -->
         <div class="border-b border-border mb-6">
             <nav class="flex space-x-8">
-                <button onclick="switchTab('tokens')" id="tabTokens" class="tab-btn border-b-2 border-primary text-sm font-medium py-3 px-1">Token 管理</button>
-                <button onclick="switchTab('settings')" id="tabSettings" class="tab-btn border-b-2 border-transparent text-sm font-medium py-3 px-1">Setting 配置</button>
+                <button onclick="switchTab('tokens')" id="tabTokens" class="tab-btn border-b-2 border-primary text-sm font-medium py-3 px-1">Token Management</button>
+                <button onclick="switchTab('settings')" id="tabSettings" class="tab-btn border-b-2 border-transparent text-sm font-medium py-3 px-1">Settings</button>
+                <button onclick="switchTab('cloudinary')" id="tabCloudinary" class="tab-btn border-b-2 border-transparent text-sm font-medium py-3 px-1">Cloudinary</button>
             </nav>
         </div>
 
@@ -92,42 +93,42 @@
         <!-- 统计卡片 -->
         <div class="grid gap-4 grid-cols-2 md:grid-cols-4 mb-6">
             <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">Token 总数</p>
+                <p class="text-sm font-medium text-muted-foreground mb-2">Total Tokens</p>
                 <h3 class="text-xl font-bold" id="statTotal">-</h3>
             </div>
 
             <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">未使用</p>
+                <p class="text-sm font-medium text-muted-foreground mb-2">Unused</p>
                 <h3 class="text-xl font-bold text-gray-500" id="statUnused">-</h3>
             </div>
 
             <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">限流中</p>
+                <p class="text-sm font-medium text-muted-foreground mb-2">Rate-Limited</p>
                 <h3 class="text-xl font-bold text-orange-600" id="statLimited">-</h3>
             </div>
 
             <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">失效</p>
+                <p class="text-sm font-medium text-muted-foreground mb-2">Expired</p>
                 <h3 class="text-xl font-bold text-destructive" id="statExpired">-</h3>
             </div>
 
             <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">正常</p>
+                <p class="text-sm font-medium text-muted-foreground mb-2">Active</p>
                 <h3 class="text-xl font-bold text-green-600" id="statActive">-</h3>
             </div>
 
             <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">总剩余</p>
+                <p class="text-sm font-medium text-muted-foreground mb-2">Total Remaining</p>
                 <h3 class="text-xl font-bold" id="statTotalRemaining">-</h3>
             </div>
 
             <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">普通剩余</p>
+                <p class="text-sm font-medium text-muted-foreground mb-2">Normal Remaining</p>
                 <h3 class="text-xl font-bold text-blue-600" id="statNormalRemaining">-</h3>
             </div>
 
             <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">高级剩余</p>
+                <p class="text-sm font-medium text-muted-foreground mb-2">Heavy Remaining</p>
                 <h3 class="text-xl font-bold text-purple-600" id="statHeavyRemaining">-</h3>
             </div>
         </div>
@@ -139,16 +140,16 @@
                 <div class="flex items-center gap-3 flex-1">
                     <div class="flex items-center gap-2">
                         <select id="filterType" onchange="filterTokens()" class="h-8 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring">
-                            <option value="all">全部类型</option>
+                            <option value="all">All Types</option>
                             <option value="sso">SSO</option>
                             <option value="ssoSuper">SuperSSO</option>
                         </select>
                         <select id="filterStatus" onchange="filterTokens()" class="h-8 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring">
-                            <option value="all">全部状态</option>
-                            <option value="未使用">未使用</option>
-                            <option value="限流中">限流中</option>
-                            <option value="失效">失效</option>
-                            <option value="正常">正常</option>
+                            <option value="all">All Statuses</option>
+                            <option value="未使用">Unused</option>
+                            <option value="限流中">Rate-Limited</option>
+                            <option value="失效">Expired</option>
+                            <option value="正常">Active</option>
                         </select>
                     </div>
                 </div>
@@ -157,7 +158,7 @@
                     <button 
                         onclick="refreshTokens()"
                         class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                        title="刷新列表"
+                        title="Refresh List"
                     >
                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="23 4 23 10 17 10"/>
@@ -169,7 +170,7 @@
                         <button
                             onclick="exportSelected()"
                             class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                            title="导出选中项"
+                            title="Export Selected"
                         >
                             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -180,7 +181,7 @@
                         <button
                             onclick="batchDelete()"
                             class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive h-8 w-8"
-                            title="批量删除"
+                            title="Batch Delete"
                         >
                             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="3 6 5 6 21 6"/>
@@ -193,13 +194,13 @@
                     <button
                         onclick="openAddModal()"
                         class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3"
-                        title="添加 Token"
+                        title="Add Token"
                     >
                         <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="12" y1="5" x2="12" y2="19"/>
                             <line x1="5" y1="12" x2="19" y2="12"/>
                         </svg>
-                        <span class="text-sm font-medium">新增</span>
+                        <span class="text-sm font-medium">Add</span>
                     </button>
                 </div>
             </div>
@@ -218,12 +219,12 @@
                                 >
                             </th>
                             <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-72">Token</th>
-                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-20">类型</th>
-                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-20">状态</th>
-                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-20">普通剩余</th>
-                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-20">高级剩余</th>
-                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-40">创建时间</th>
-                            <th class="h-10 px-3 text-right align-middle text-sm font-medium text-muted-foreground w-20">操作</th>
+                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-20">Type</th>
+                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-20">Status</th>
+                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-20">Normal Remaining</th>
+                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-20">Heavy Remaining</th>
+                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-40">Created Time</th>
+                            <th class="h-10 px-3 text-right align-middle text-sm font-medium text-muted-foreground w-20">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="tokenTableBody" class="divide-y divide-border">
@@ -237,7 +238,7 @@
                     <rect x="3" y="3" width="18" height="18" rx="2"/>
                     <path d="M9 9h6v6H9z"/>
                 </svg>
-                <p class="text-sm text-muted-foreground">暂无数据</p>
+                <p class="text-sm text-muted-foreground">No data</p>
             </div>
         </div>
         </div>
@@ -247,32 +248,32 @@
             <!-- 全局配置区域 -->
             <div class="mb-8">
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold">全局配置</h2>
-                    <button onclick="saveGlobalSettings()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-black hover:text-white h-9 px-4 transition-colors">保存配置</button>
+                    <h2 class="text-xl font-bold">Global Settings</h2>
+                    <button onclick="saveGlobalSettings()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-black hover:text-white h-9 px-4 transition-colors">Save Settings</button>
                 </div>
                 <div class="grid gap-4 lg:grid-cols-3">
                     <!-- 系统设置 -->
                     <div class="rounded-lg border border-border bg-background p-6">
-                        <h3 class="text-sm font-semibold mb-4">系统设置</h3>
+                        <h3 class="text-sm font-semibold mb-4">System Settings</h3>
                         <div class="space-y-4">
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    登陆账户
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="登录管理后台的用户名">?</span>
+                                    Admin Username
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Username for admin console">?</span>
                                 </label>
                                 <input id="cfgAdminUser" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="admin">
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    登陆密码
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="登录管理后台的密码，留空表示不修改当前密码">?</span>
+                                    Admin Password
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Password for admin console. Leave blank to keep current password.">?</span>
                                 </label>
-                                <input id="cfgAdminPass" type="password" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="留空则不修改">
+                                <input id="cfgAdminPass" type="password" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Leave blank to keep current">
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    日志级别
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="日志详细程度。DEBUG：最详细 | INFO：一般信息 | WARNING：警告 | ERROR：仅错误">?</span>
+                                    Log Level
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Log verbosity. DEBUG: most detailed | INFO: general info | WARNING: warnings | ERROR: only errors">?</span>
                                 </label>
                                 <select id="cfgLogLevel" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                     <option>DEBUG</option><option>INFO</option><option>WARNING</option><option>ERROR</option>
@@ -283,37 +284,37 @@
 
                     <!-- 媒体设置 -->
                     <div class="rounded-lg border border-border bg-background p-6">
-                        <h3 class="text-sm font-semibold mb-4">媒体设置</h3>
+                        <h3 class="text-sm font-semibold mb-4">Media Settings</h3>
                         <div class="space-y-4">
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    图片模式
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="返回图片的方式。URL：图片链接，支持图片缓存 | Base64：base64编码，不支持缓存">?</span>
+                                    Image Mode
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="How images are returned. URL: image link, supports caching | Base64: base64 encoded, no caching">?</span>
                                 </label>
                                 <select id="cfgImageMode" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="url">URL (图片链接)</option>
-                                    <option value="base64">Base64 (base64编码)</option>
+                                    <option value="url">URL (Image Link)</option>
+                                    <option value="base64">Base64 (base64 encoded)</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    服务网址
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="服务器的公网访问地址，用于构建图片URL链接（仅在图片模式为URL时需要）">?</span>
+                                    Service URL
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Public URL of the server, used to build image URLs (only needed for URL image mode)">?</span>
                                 </label>
                                 <input id="cfgBaseUrl" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="http://localhost:8000">
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                        图片缓存 (MB)
-                                        <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="图片缓存的最大容量（MB），超过后会自动清理旧缓存">?</span>
+                                        Image Cache (MB)
+                                        <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Max image cache size (MB). Old cache will be cleared when exceeded.">?</span>
                                     </label>
                                     <input id="cfgImageCacheMaxSize" type="number" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="500">
                                 </div>
                                 <div>
                                     <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                        视频缓存 (MB)
-                                        <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="视频缓存的最大容量（MB），超过后会自动清理旧缓存">?</span>
+                                        Video Cache (MB)
+                                        <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Max video cache size (MB). Old cache will be cleared when exceeded.">?</span>
                                     </label>
                                     <input id="cfgVideoCacheMaxSize" type="number" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="1000">
                                 </div>
@@ -323,10 +324,10 @@
 
                     <!-- 缓存管理 -->
                     <div class="rounded-lg border border-border bg-background p-6">
-                        <h3 class="text-sm font-semibold mb-4">缓存管理</h3>
+                        <h3 class="text-sm font-semibold mb-4">Cache Management</h3>
                         <div class="space-y-4">
                             <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 block">图片缓存</label>
+                                <label class="text-sm font-medium text-muted-foreground mb-2 block">Image Cache</label>
                                 <div class="flex gap-2">
                                     <input id="imageCacheSize" readonly class="flex h-9 flex-1 rounded-md border border-input bg-muted px-3 py-2 text-sm" placeholder="0 MB">
                                     <button onclick="clearImageCache()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-red-600 hover:text-white h-9 w-9 p-0 transition-colors">
@@ -337,7 +338,7 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 block">视频缓存</label>
+                                <label class="text-sm font-medium text-muted-foreground mb-2 block">Video Cache</label>
                                 <div class="flex gap-2">
                                     <input id="videoCacheSize" readonly class="flex h-9 flex-1 rounded-md border border-input bg-muted px-3 py-2 text-sm" placeholder="0 MB">
                                     <button onclick="clearVideoCache()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-red-600 hover:text-white h-9 w-9 p-0 transition-colors">
@@ -348,7 +349,7 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 block">所有缓存</label>
+                                <label class="text-sm font-medium text-muted-foreground mb-2 block">All Cache</label>
                                 <div class="flex gap-2">
                                     <input id="totalCacheSize" readonly class="flex h-9 flex-1 rounded-md border border-input bg-muted px-3 py-2 text-sm font-medium" placeholder="0 MB">
                                     <button onclick="clearCache()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-red-600 hover:text-white h-9 w-9 p-0 transition-colors">
@@ -366,43 +367,43 @@
             <!-- Grok 配置区域 -->
             <div>
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold">Grok 配置</h2>
-                    <button onclick="saveGrokSettings()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-black hover:text-white h-9 px-4 transition-colors">保存配置</button>
+                    <h2 class="text-xl font-bold">Grok Settings</h2>
+                    <button onclick="saveGrokSettings()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-black hover:text-white h-9 px-4 transition-colors">Save Settings</button>
                 </div>
                 <div class="grid gap-4 lg:grid-cols-3">
                     <!-- 基础设置 -->
                     <div class="rounded-lg border border-border bg-background p-6">
-                        <h3 class="text-sm font-semibold mb-4">基础设置</h3>
+                        <h3 class="text-sm font-semibold mb-4">Basic Settings</h3>
                         <div class="space-y-4">
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
                                     API Key
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="接口调用的身份验证密钥，用于保护API访问安全">?</span>
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="API key for authentication, used to protect API access">?</span>
                                 </label>
                                 <input id="cfgApiKey" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="">
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
                                     X Statsig ID
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Statsig统计ID，用于功能实验和统计分析">?</span>
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Statsig ID for experiments and analytics">?</span>
                                 </label>
                                 <input id="cfgStatsigId" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="">
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    过滤标签
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="需要过滤的响应标签，多个标签用逗号分隔。如：xaiartifact,xai:tool_usage_card">?</span>
+                                    Filter Tags
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Tags to filter from response, comma-separated. e.g.: xaiartifact,xai:tool_usage_card">?</span>
                                 </label>
                                 <input id="cfgFilteredTags" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="xaiartifact,xai:tool_usage_card">
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    临时会话
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="开启后每次对话都创建新会话，不保留历史；关闭后可以继续之前的对话">?</span>
+                                    Temporary Session
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="If enabled, each conversation creates a new session without history. If disabled, conversations can be continued.">?</span>
                                 </label>
                                 <select id="cfgTemporary" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="false">关闭</option>
-                                    <option value="true">开启</option>
+                                    <option value="false">Off</option>
+                                    <option value="true">On</option>
                                 </select>
                             </div>
                         </div>
@@ -410,26 +411,26 @@
 
                     <!-- 代理设置 -->
                     <div class="rounded-lg border border-border bg-background p-6">
-                        <h3 class="text-sm font-semibold mb-4">代理设置</h3>
+                        <h3 class="text-sm font-semibold mb-4">Proxy Settings</h3>
                         <div class="space-y-4">
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
                                     CF Clearance
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Cloudflare验证cookie，用于绕过Cloudflare人机验证。">?</span>
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Cloudflare verification cookie, used to bypass Cloudflare's bot check.">?</span>
                                 </label>
                                 <input id="cfgCfClearance" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="">
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Proxy Url (服务代理)
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="API请求和上传使用的代理。支持 http、https、socks5。格式：socks5://user:pass@host:port">?</span>
+                                    Proxy Url (Service Proxy)
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Proxy for API requests and uploads. Supports http, https, socks5. Format: socks5://user:pass@host:port">?</span>
                                 </label>
                                 <input id="cfgProxyUrl" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="socks5://username:password@127.0.0.1:7890">
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Cache Proxy Url (缓存代理)
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="图片/视频缓存下载专用代理，不设置则使用服务代理。Grok的图片/视频获取接口对IP风控要求不高，可使用便宜的大流量节点">?</span>
+                                    Cache Proxy Url (Cache Proxy)
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Dedicated proxy for image/video cache downloads. If not set, service proxy is used. Grok's media endpoints have low IP risk control, so cheaper high-bandwidth nodes can be used.">?</span>
                                 </label>
                                 <input id="cfgCacheProxyUrl" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="socks5://username:password@127.0.0.1:7890">
                             </div>
@@ -438,26 +439,26 @@
 
                     <!-- 超时设置 -->
                     <div class="rounded-lg border border-border bg-background p-6">
-                        <h3 class="text-sm font-semibold mb-4">超时设置</h3>
+                        <h3 class="text-sm font-semibold mb-4">Timeout Settings</h3>
                         <div class="space-y-4">
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    首次响应超时 (秒)
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="等待API首次返回数据的最大时间（秒）。超时后会报错，建议30-60秒">?</span>
+                                    First Response Timeout (s)
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Max time to wait for the first data chunk from the API (seconds). Will error on timeout. Recommended: 30-60s">?</span>
                                 </label>
                                 <input id="cfgStreamFirstResponseTimeout" type="number" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="30">
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    流式间隔超时 (秒)
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="两次数据块之间的最大间隔时间（秒）。如果超过此时间没有收到新数据则断开，建议60-180秒">?</span>
+                                    Stream Interval Timeout (s)
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Max interval between data chunks (seconds). Connection will be closed if exceeded. Recommended: 60-180s">?</span>
                                 </label>
                                 <input id="cfgStreamChunkTimeout" type="number" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="120">
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    生成总过程超时 (秒)
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="整个对话生成的最大总时长（秒）。适用于超长对话，建议300-900秒">?</span>
+                                    Total Generation Timeout (s)
+                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Max total time for the entire conversation generation (seconds). For very long conversations. Recommended: 300-900s">?</span>
                                 </label>
                                 <input id="cfgStreamTotalTimeout" type="number" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="600">
                             </div>
@@ -469,23 +470,106 @@
             <!-- 配置提示 -->
             <div class="mt-8 rounded border border-blue-300 bg-blue-50 px-4 py-3">
                 <div class="text-xs text-gray-800 leading-relaxed">
-                    <div class="text-base font-medium text-gray-900 mb-2.5">部分说明</div>
+                    <div class="text-base font-medium text-gray-900 mb-2.5">Notes</div>
                     <div class="space-y-1.5">
-                        <div><span class="font-medium">X Statsig ID：</span>反机器人验证参数，非必要请勿修改 X Statsig ID</div>
-                        <div><span class="font-medium">服务网址：</span>图片/视频链接返回时需要拼接您的服务网址（如 https://yourdomain.com），若您不使用视频功能且图片使用Base64模式则可留空</div>
-                        <div><span class="font-medium">代理设置：</span>服务代理用于访问Grok API和上传图片；缓存代理专门用于下载图片和视频缓存。若仅设置服务代理，缓存将使用相同的代理；若都设置，则分别使用不同的代理</div>
-                        <div><span class="font-medium">请求 403：</span>通常是被 CF 拦截了，可采用以下办法之一：1. 更换服务器IP ｜ 2. 配置代理IP ｜ 3.在服务器中访问 grok.com 通过 CF 验证后 F12 获取 cf_clearance</div>
+                        <div><span class="font-medium">X Statsig ID:</span> Anti-bot verification parameter. Do not modify unless necessary.</div>
+                        <div><span class="font-medium">Service URL:</span> Your public service URL (e.g., https://yourdomain.com) is needed to construct image/video URLs. Can be left blank if you don't use video and use Base64 mode for images.</div>
+                        <div><span class="font-medium">Proxy Settings:</span> The service proxy is for Grok API access and image uploads. The cache proxy is specifically for downloading image/video cache. If only the service proxy is set, it will be used for caching too. If both are set, they are used separately.</div>
+                        <div><span class="font-medium">Request 403:</span> Usually blocked by Cloudflare. Solutions: 1. Change server IP | 2. Configure a proxy IP | 3. Visit grok.com on the server, pass the CF check, then get cf_clearance from F12 developer tools.</div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cloudinary 配置面板 -->
+        <div id="panelCloudinary" class="hidden">
+            <div class="rounded-lg border border-border bg-background">
+                <div class="flex items-center justify-between gap-4 p-4 border-b border-border">
+                    <h2 class="text-xl font-bold">Cloudinary Account Management</h2>
+                    <button
+                        onclick="openAddCloudinaryModal()"
+                        class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3"
+                    >
+                        <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        <span class="text-sm font-medium">Add</span>
+                    </button>
+                </div>
+                <div class="relative w-full overflow-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-border">
+                                <th class="h-10 px-3 text-left align-middle font-medium text-muted-foreground">Cloud Name</th>
+                                <th class="h-10 px-3 text-left align-middle font-medium text-muted-foreground">API Key</th>
+                                <th class="h-10 px-3 text-right align-middle font-medium text-muted-foreground">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cloudinaryTableBody" class="divide-y divide-border">
+                            <!-- 动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="cloudinaryEmptyState" class="hidden flex flex-col items-center justify-center py-12">
+                    <svg class="h-10 w-10 text-muted-foreground/50 mb-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <path d="M9 9h6v6H9z"/>
+                    </svg>
+                    <p class="text-sm text-muted-foreground">No data</p>
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- 添加 Cloudinary 账户模态框 -->
+    <div id="addCloudinaryModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+        <div class="bg-background rounded-lg border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
+            <div class="flex items-center justify-between p-5 border-b border-border">
+                <h3 class="text-lg font-semibold">Add Cloudinary Account</h3>
+                <button onclick="closeAddCloudinaryModal()" class="text-muted-foreground hover:text-foreground transition-colors">
+                    <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-5 space-y-4">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-muted-foreground">Cloud Name</label>
+                    <input id="addCloudinaryCloudName" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Cloud Name">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-muted-foreground">API Key</label>
+                    <input id="addCloudinaryApiKey" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="API Key">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-muted-foreground">API Secret</label>
+                    <input id="addCloudinaryApiSecret" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="API Secret">
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 p-5 border-t border-border bg-muted/30">
+                <button
+                    onclick="closeAddCloudinaryModal()"
+                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent h-9 px-5"
+                >
+                    Cancel
+                </button>
+                <button
+                    onclick="submitAddCloudinaryAccount()"
+                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-5"
+                >
+                    Add
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 添加 Token 模态框 -->
     <div id="addModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
         <div class="bg-background rounded-lg border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl">
             <div class="flex items-center justify-between p-5 border-b border-border">
-                <h3 class="text-lg font-semibold">添加 Token</h3>
+                <h3 class="text-lg font-semibold">Add Token</h3>
                 <button onclick="closeAddModal()" class="text-muted-foreground hover:text-foreground transition-colors">
                     <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"/>
@@ -495,18 +579,18 @@
             </div>
             <div class="p-5 space-y-4">
                 <div class="space-y-2">
-                    <label class="text-sm font-medium text-muted-foreground">Token 类型</label>
+                    <label class="text-sm font-medium text-muted-foreground">Token Type</label>
                     <select id="addTokenType" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
                         <option value="sso">SSO</option>
                         <option value="ssoSuper">SuperSSO</option>
                     </select>
                 </div>
                 <div class="space-y-2">
-                    <label class="text-sm font-medium text-muted-foreground">Token 列表 <span class="text-muted-foreground">(每行一个)</span></label>
+                    <label class="text-sm font-medium text-muted-foreground">Token List <span class="text-muted-foreground">(one per line)</span></label>
                     <textarea
                         id="addTokenList"
                         rows="12"
-                        placeholder="请输入 Token，每行一个"
+                        placeholder="Enter tokens, one per line"
                         class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono resize-none"
                     ></textarea>
                 </div>
@@ -516,13 +600,13 @@
                     onclick="closeAddModal()"
                     class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent h-9 px-5"
                 >
-                    取消
+                    Cancel
                 </button>
                 <button
                     onclick="submitAddTokens()"
                     class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-5"
                 >
-                    添加
+                    Add
                 </button>
             </div>
         </div>
@@ -533,38 +617,44 @@
         const $=(id)=>document.getElementById(id),
         checkAuth=()=>{const t=localStorage.getItem('adminToken');return t||(location.href='/login',null),t},
         apiRequest=async(url,opts={})=>{const t=checkAuth();if(!t)return null;const r=await fetch(url,{...opts,headers:{...opts.headers,Authorization:`Bearer ${t}`,'Content-Type':'application/json'}});return r.status===401?(localStorage.removeItem('adminToken'),location.href='/login',null):r},
-        loadStats=async()=>{try{const r=await apiRequest('/api/stats');if(!r)return;const d=await r.json();if(d.success){const s=d.data;$('statTotal').textContent=s.total||0;['Unused','Limited','Expired','Active'].forEach((k,i)=>$(`stat${k}`).textContent=(s.normal?.[k.toLowerCase()]||0)+(s.super?.[k.toLowerCase()]||0))}}catch(e){console.error('加载统计失败:',e)}},
+        loadStats=async()=>{try{const r=await apiRequest('/api/stats');if(!r)return;const d=await r.json();if(d.success){const s=d.data;$('statTotal').textContent=s.total||0;['Unused','Limited','Expired','Active'].forEach((k,i)=>$(`stat${k}`).textContent=(s.normal?.[k.toLowerCase()]||0)+(s.super?.[k.toLowerCase()]||0))}}catch(e){console.error('Failed to load stats:',e)}},
         calcRemaining=()=>{let n=0,h=0;allTokens.forEach(t=>{if(t.remaining_queries>0)n+=t.remaining_queries;if(t.heavy_remaining_queries>0)h+=t.heavy_remaining_queries});return{normal:n,heavy:h,total:n+h}},
-        loadTokens=async()=>{try{const r=await apiRequest('/api/tokens');if(!r)return;const d=await r.json();d.success&&(allTokens=d.data,filteredTokens=allTokens,selectedTokens.clear(),renderTokens(),updateRemaining())}catch(e){console.error('加载列表失败:',e)}},
+        loadTokens=async()=>{try{const r=await apiRequest('/api/tokens');if(!r)return;const d=await r.json();d.success&&(allTokens=d.data,filteredTokens=allTokens,selectedTokens.clear(),renderTokens(),updateRemaining())}catch(e){console.error('Failed to load list:',e)}},
         updateRemaining=()=>{const r=calcRemaining();['Total','Normal','Heavy'].forEach(k=>$(`stat${k}Remaining`).textContent=r[k.toLowerCase()]===0?'-':r[k.toLowerCase()].toLocaleString())}
 
-        const renderTokens=()=>{const tb=$('tokenTableBody'),es=$('emptyState'),ss={'未使用':'bg-muted text-muted-foreground','限流中':'bg-orange-50 text-orange-700 border-orange-200','失效':'bg-destructive/10 text-destructive border-destructive/20','正常':'bg-green-50 text-green-700 border-green-200'},ts={sso:'bg-blue-50 text-blue-700 border-blue-200',ssoSuper:'bg-purple-50 text-purple-700 border-purple-200'},tl={sso:'SSO',ssoSuper:'SuperSSO'};if(!filteredTokens.length){tb.innerHTML='';es.classList.remove('hidden');$('selectAll').checked=false;return updateBatchActions()}es.classList.add('hidden');tb.innerHTML=filteredTokens.map(t=>`<tr class="transition-colors"><td class="py-2.5 px-3 align-middle w-12"><input type="checkbox" class="token-checkbox h-3.5 w-3.5 rounded border border-input focus:ring-1 focus:ring-ring" data-token="${t.token}" data-type="${t.token_type}" ${selectedTokens.has(t.token)?'checked':''} onchange="toggleToken('${t.token}')"></td><td class="py-2.5 px-3 align-middle w-80"><div class="flex items-center gap-2"><span class="font-mono text-xs">${t.token.substring(0,30)}...</span><button onclick="copyToken('${t.token.replace(/'/g,"\\'")}',event)" class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent h-6 w-6" title="复制完整 Token"><svg class="h-3 w-3 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div></td><td class="py-2.5 px-3 align-middle w-20"><span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border ${ts[t.token_type]}">${tl[t.token_type]}</span></td><td class="py-2.5 px-3 align-middle w-20"><span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border ${ss[t.status]}">${t.status}</span></td><td class="py-2.5 px-3 align-middle w-20 text-xs tabular-nums">${t.remaining_queries===-1?'-':t.remaining_queries}</td><td class="py-2.5 px-3 align-middle w-20 text-xs tabular-nums">${t.heavy_remaining_queries===-1?'-':t.heavy_remaining_queries}</td><td class="py-2.5 px-3 align-middle w-32 text-xs text-muted-foreground">${t.created_time?new Date(t.created_time).toLocaleString('zh-CN',{dateStyle:'short',timeStyle:'short'}):'-'}</td><td class="py-2.5 px-3 align-middle text-right w-16"><button onclick="deleteToken('${t.token}','${t.token_type}')" class="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive h-7 w-7"><svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td></tr>`).join('');updateBatchActions()},
+        const renderTokens=()=>{const tb=$('tokenTableBody'),es=$('emptyState'),ss={'未使用':'bg-muted text-muted-foreground','限流中':'bg-orange-50 text-orange-700 border-orange-200','失效':'bg-destructive/10 text-destructive border-destructive/20','正常':'bg-green-50 text-green-700 border-green-200'},ts={sso:'bg-blue-50 text-blue-700 border-blue-200',ssoSuper:'bg-purple-50 text-purple-700 border-purple-200'},tl={sso:'SSO',ssoSuper:'SuperSSO'};if(!filteredTokens.length){tb.innerHTML='';es.classList.remove('hidden');$('selectAll').checked=false;return updateBatchActions()}es.classList.add('hidden');tb.innerHTML=filteredTokens.map(t=>`<tr class="transition-colors"><td class="py-2.5 px-3 align-middle w-12"><input type="checkbox" class="token-checkbox h-3.5 w-3.5 rounded border border-input focus:ring-1 focus:ring-ring" data-token="${t.token}" data-type="${t.token_type}" ${selectedTokens.has(t.token)?'checked':''} onchange="toggleToken('${t.token}')"></td><td class="py-2.5 px-3 align-middle w-80"><div class="flex items-center gap-2"><span class="font-mono text-xs">${t.token.substring(0,30)}...</span><button onclick="copyToken('${t.token.replace(/'/g,"\\'")}',event)" class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent h-6 w-6" title="Copy Full Token"><svg class="h-3 w-3 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div></td><td class="py-2.5 px-3 align-middle w-20"><span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border ${ts[t.token_type]}">${tl[t.token_type]}</span></td><td class="py-2.5 px-3 align-middle w-20"><span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border ${ss[t.status]}">${t.status}</span></td><td class="py-2.5 px-3 align-middle w-20 text-xs tabular-nums">${t.remaining_queries===-1?'-':t.remaining_queries}</td><td class="py-2.5 px-3 align-middle w-20 text-xs tabular-nums">${t.heavy_remaining_queries===-1?'-':t.heavy_remaining_queries}</td><td class="py-2.5 px-3 align-middle w-32 text-xs text-muted-foreground">${t.created_time?new Date(t.created_time).toLocaleString('en-US',{dateStyle:'short',timeStyle:'short'}):'-'}</td><td class="py-2.5 px-3 align-middle text-right w-16"><button onclick="deleteToken('${t.token}','${t.token_type}')" class="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive h-7 w-7"><svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td></tr>`).join('');updateBatchActions()},
         toggleToken=t=>selectedTokens[selectedTokens.has(t)?'delete':'add'](t)||updateBatchActions(),
         toggleSelectAll=()=>{const sa=$('selectAll');sa.checked?filteredTokens.forEach(t=>selectedTokens.add(t.token)):selectedTokens.clear();renderTokens()},
-        updateBatchActions=()=>{const ba=$('batchActions'),sc=$('selectedCount'),c=selectedTokens.size;ba.classList[c>0?'add':'remove']('flex');ba.classList[c>0?'remove':'add']('hidden');c>0&&(sc.textContent=`已选择 ${c} 项`);$('selectAll').checked=filteredTokens.length>0&&c===filteredTokens.length},
+        updateBatchActions=()=>{const ba=$('batchActions'),sc=$('selectedCount'),c=selectedTokens.size;ba.classList[c>0?'add':'remove']('flex');ba.classList[c>0?'remove':'add']('hidden');c>0&&(sc.textContent=`${c} selected`);$('selectAll').checked=filteredTokens.length>0&&c===filteredTokens.length},
         filterTokens=()=>{const tf=$('filterType').value,sf=$('filterStatus').value;filteredTokens=allTokens.filter(t=>(tf==='all'||t.token_type===tf)&&(sf==='all'||t.status===sf));selectedTokens.clear();renderTokens()},
         refreshTokens=async()=>{await loadTokens();await loadStats()},
         openAddModal=()=>$('addModal').classList.remove('hidden'),
         closeAddModal=()=>{$('addModal').classList.add('hidden');$('addTokenList').value=''},
-        deleteToken=async(t,tt)=>{if(!confirm('确定要删除这个 Token 吗?'))return;try{const r=await apiRequest('/api/tokens/delete',{method:'POST',body:JSON.stringify({tokens:[t],token_type:tt})});if(!r)return;const d=await r.json();d.success?await refreshTokens():alert('删除失败: '+(d.error||'未知错误'))}catch(e){alert('删除失败: '+e.message)}},
-        batchDelete=async()=>{if(!selectedTokens.size||!confirm(`确定要删除选中的 ${selectedTokens.size} 个 Token 吗?此操作不可恢复!`))return;const tbt={sso:[],ssoSuper:[]};document.querySelectorAll('.token-checkbox:checked').forEach(cb=>tbt[cb.dataset.type].push(cb.dataset.token));try{const ps=[];['sso','ssoSuper'].forEach(k=>tbt[k].length&&ps.push(apiRequest('/api/tokens/delete',{method:'POST',body:JSON.stringify({tokens:tbt[k],token_type:k})})));await Promise.all(ps);await refreshTokens()}catch(e){alert('批量删除失败: '+e.message)}},
-        submitAddTokens=async()=>{const tt=$('addTokenType').value,tks=$('addTokenList').value.split('\n').map(t=>t.trim()).filter(t=>t);if(!tks.length)return alert('请输入至少一个 Token');try{const r=await apiRequest('/api/tokens/add',{method:'POST',body:JSON.stringify({tokens:tks,token_type:tt})});if(!r)return;const d=await r.json();d.success?(closeAddModal(),await refreshTokens()):alert('添加失败: '+(d.error||'未知错误'))}catch(e){alert('添加失败: '+e.message)}},
-        copyToken=async(t,e)=>{e.stopPropagation();try{await navigator.clipboard.writeText(t);showToast('Token 已复制到剪贴板','success')}catch(err){console.error('复制失败:',err);showToast('复制失败,请手动复制','error')}}
+        deleteToken=async(t,tt)=>{if(!confirm('Are you sure you want to delete this token?'))return;try{const r=await apiRequest('/api/tokens/delete',{method:'POST',body:JSON.stringify({tokens:[t],token_type:tt})});if(!r)return;const d=await r.json();d.success?await refreshTokens():alert('Delete failed: '+(d.error||'Unknown error'))}catch(e){alert('Delete failed: '+e.message)}},
+        batchDelete=async()=>{if(!selectedTokens.size||!confirm(`Are you sure you want to delete the selected ${selectedTokens.size} tokens? This action cannot be undone!`))return;const tbt={sso:[],ssoSuper:[]};document.querySelectorAll('.token-checkbox:checked').forEach(cb=>tbt[cb.dataset.type].push(cb.dataset.token));try{const ps=[];['sso','ssoSuper'].forEach(k=>tbt[k].length&&ps.push(apiRequest('/api/tokens/delete',{method:'POST',body:JSON.stringify({tokens:tbt[k],token_type:k})})));await Promise.all(ps);await refreshTokens()}catch(e){alert('Batch delete failed: '+e.message)}},
+        submitAddTokens=async()=>{const tt=$('addTokenType').value,tks=$('addTokenList').value.split('\n').map(t=>t.trim()).filter(t=>t);if(!tks.length)return alert('Please enter at least one token');try{const r=await apiRequest('/api/tokens/add',{method:'POST',body:JSON.stringify({tokens:tks,token_type:tt})});if(!r)return;const d=await r.json();d.success?(closeAddModal(),await refreshTokens()):alert('Add failed: '+(d.error||'Unknown error'))}catch(e){alert('Add failed: '+e.message)}},
+        copyToken=async(t,e)=>{e.stopPropagation();try{await navigator.clipboard.writeText(t);showToast('Token copied to clipboard','success')}catch(err){console.error('Copy failed:',err);showToast('Copy failed, please copy manually','error')}}
 
-        const exportSelected=()=>{if(!selectedTokens.size)return showToast('请先选择要导出的 Token','error');const sd=allTokens.filter(t=>selectedTokens.has(t.token)),csv=[['Token','类型','状态','普通调用剩余','高级调用剩余','创建时间'].join(','),...sd.map(t=>[`"${t.token}"`,t.token_type==='sso'?'SSO':'SuperSSO',t.status,t.remaining_queries===-1?'未使用':t.remaining_queries,t.heavy_remaining_queries===-1?'未使用':t.heavy_remaining_queries,`"${t.created_time?new Date(t.created_time).toLocaleString('zh-CN'):'-'}"`].join(','))].join('\n'),l=document.createElement('a');l.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));l.download=`grok_tokens_${new Date().toISOString().slice(0,10)}.csv`;l.style.display='none';document.body.appendChild(l);l.click();document.body.removeChild(l);URL.revokeObjectURL(l.href);showToast(`已导出 ${selectedTokens.size} 个 Token`,'success')}
+        const exportSelected=()=>{if(!selectedTokens.size)return showToast('Please select tokens to export first','error');const sd=allTokens.filter(t=>selectedTokens.has(t.token)),csv=[['Token','Type','Status','Normal Remaining','Heavy Remaining','Created Time'].join(','),...sd.map(t=>[`"${t.token}"`,t.token_type==='sso'?'SSO':'SuperSSO',t.status,t.remaining_queries===-1?'Unused':t.remaining_queries,t.heavy_remaining_queries===-1?'Unused':t.heavy_remaining_queries,`"${t.created_time?new Date(t.created_time).toLocaleString('en-US'):'-'}"`].join(','))].join('\n'),l=document.createElement('a');l.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));l.download=`grok_tokens_${new Date().toISOString().slice(0,10)}.csv`;l.style.display='none';document.body.appendChild(l);l.click();document.body.removeChild(l);URL.revokeObjectURL(l.href);showToast(`Exported ${selectedTokens.size} tokens`,'success')}
         showToast=(m,t='info')=>{const d=document.createElement('div'),bc={success:'bg-green-600',error:'bg-destructive',info:'bg-primary'};d.className=`fixed bottom-4 right-4 ${bc[t]||bc.info} text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium z-50 animate-slide-up`;d.textContent=m;document.body.appendChild(d);setTimeout(()=>{d.style.opacity='0';d.style.transition='opacity .3s';setTimeout(()=>d.parentNode&&document.body.removeChild(d),300)},2000)}
-        logout=async()=>{if(!confirm('确定要退出登录吗?'))return;try{await apiRequest('/api/logout',{method:'POST'})}catch(e){console.error('登出失败:',e)}finally{localStorage.removeItem('adminToken');location.href='/login'}},
-        switchTab=t=>{['tokens','settings'].forEach(n=>{$(`panel${n.charAt(0).toUpperCase()+n.slice(1)}`).classList[n===t?'remove':'add']('hidden');$(`tab${n.charAt(0).toUpperCase()+n.slice(1)}`).classList[n===t?'add':'remove']('border-primary','text-primary');$(`tab${n.charAt(0).toUpperCase()+n.slice(1)}`).classList[n===t?'remove':'add']('border-transparent','text-muted-foreground')});t==='settings'&&loadSettings()},
-        updateCacheProxyReadonly=()=>{const proxyUrl=$('cfgProxyUrl').value.trim(),cacheProxyInput=$('cfgCacheProxyUrl');if(proxyUrl){cacheProxyInput.readOnly=false;cacheProxyInput.classList.remove('bg-muted');cacheProxyInput.placeholder='socks5://username:password@127.0.0.1:7890'}else{cacheProxyInput.readOnly=true;cacheProxyInput.classList.add('bg-muted');cacheProxyInput.value='';cacheProxyInput.placeholder='设置服务代理后自动启用'}};
-        loadSettings=async()=>{try{const r=await apiRequest('/api/settings');if(!r)return;const d=await r.json();if(d.success){const g=d.data.global,k=d.data.grok;$('cfgAdminUser').value=g.admin_username||'';$('cfgAdminPass').value='';$('cfgLogLevel').value=g.log_level||'DEBUG';$('cfgImageCacheMaxSize').value=g.image_cache_max_size_mb||500;$('cfgVideoCacheMaxSize').value=g.video_cache_max_size_mb||1000;$('cfgImageMode').value=g.image_mode||'url';$('cfgBaseUrl').value=g.base_url||'';$('cfgApiKey').value=k.api_key||'';$('cfgProxyUrl').value=k.proxy_url||'';$('cfgCacheProxyUrl').value=k.cache_proxy_url||'';$('cfgCfClearance').value=k.cf_clearance||'';$('cfgStatsigId').value=k.x_statsig_id||'';$('cfgFilteredTags').value=k.filtered_tags||'';$('cfgTemporary').value=k.temporary!==false?'true':'false';$('cfgStreamChunkTimeout').value=k.stream_chunk_timeout||120;$('cfgStreamFirstResponseTimeout').value=k.stream_first_response_timeout||30;$('cfgStreamTotalTimeout').value=k.stream_total_timeout||600;updateCacheProxyReadonly();await loadCacheSize()}}catch(e){console.error('加载配置失败:',e);showToast('加载配置失败','error')}},
-        loadCacheSize=async()=>{try{const r=await apiRequest('/api/cache/size');if(!r)return;const d=await r.json();if(d.success){$('imageCacheSize').value=d.data.image_size||'0 MB';$('videoCacheSize').value=d.data.video_size||'0 MB';$('totalCacheSize').value=d.data.total_size||'0 MB'}}catch(e){console.error('加载缓存大小失败:',e);$('imageCacheSize').value='0 MB';$('videoCacheSize').value='0 MB';$('totalCacheSize').value='0 MB'}},
-        clearImageCache=async()=>{if(!confirm('确定要清理图片缓存吗？此操作将删除所有图片缓存文件！'))return;try{const r=await apiRequest('/api/cache/clear/images',{method:'POST'});if(!r)return;const d=await r.json();d.success?(showToast(`图片缓存清理完成，已删除 ${d.data.deleted_count||0} 个文件`,'success'),await loadCacheSize()):showToast('清理失败: '+(d.error||'未知错误'),'error')}catch(e){showToast('清理失败: '+e.message,'error')}},
-        clearVideoCache=async()=>{if(!confirm('确定要清理视频缓存吗？此操作将删除所有视频缓存文件！'))return;try{const r=await apiRequest('/api/cache/clear/videos',{method:'POST'});if(!r)return;const d=await r.json();d.success?(showToast(`视频缓存清理完成，已删除 ${d.data.deleted_count||0} 个文件`,'success'),await loadCacheSize()):showToast('清理失败: '+(d.error||'未知错误'),'error')}catch(e){showToast('清理失败: '+e.message,'error')}},
-        clearCache=async()=>{if(!confirm('确定要清理缓存吗？此操作将删除 /data/temp 目录中的所有文件！'))return;try{const r=await apiRequest('/api/cache/clear',{method:'POST'});if(!r)return;const d=await r.json();d.success?(showToast(`缓存清理完成，已删除 ${d.data.deleted_count||0} 个文件`,'success'),await loadCacheSize()):showToast('清理失败: '+(d.error||'未知错误'),'error')}catch(e){showToast('清理失败: '+e.message,'error')}},
-        saveGlobalSettings=async()=>{const gc={admin_username:$('cfgAdminUser').value,log_level:$('cfgLogLevel').value,image_cache_max_size_mb:parseInt($('cfgImageCacheMaxSize').value)||500,video_cache_max_size_mb:parseInt($('cfgVideoCacheMaxSize').value)||1000,image_mode:$('cfgImageMode').value,base_url:$('cfgBaseUrl').value};if($('cfgAdminPass').value)gc.admin_password=$('cfgAdminPass').value;try{const r=await apiRequest('/api/settings');if(!r)return;const d=await r.json();if(!d.success)return showToast('加载配置失败','error');const s=await apiRequest('/api/settings',{method:'POST',body:JSON.stringify({global_config:gc,grok_config:d.data.grok})});if(!s)return;const sd=await s.json();sd.success?(showToast('全局配置保存成功','success'),$('cfgAdminPass').value=''):showToast('保存失败: '+(sd.error||'未知错误'),'error')}catch(e){showToast('保存失败: '+e.message,'error')}},
-        saveGrokSettings=async()=>{const pu=$('cfgProxyUrl').value.trim(),kc={api_key:$('cfgApiKey').value,proxy_url:pu,cache_proxy_url:pu?$('cfgCacheProxyUrl').value:'',cf_clearance:$('cfgCfClearance').value,x_statsig_id:$('cfgStatsigId').value,filtered_tags:$('cfgFilteredTags').value,temporary:$('cfgTemporary').value==='true',stream_chunk_timeout:parseInt($('cfgStreamChunkTimeout').value)||120,stream_first_response_timeout:parseInt($('cfgStreamFirstResponseTimeout').value)||30,stream_total_timeout:parseInt($('cfgStreamTotalTimeout').value)||600};try{const r=await apiRequest('/api/settings');if(!r)return;const d=await r.json();if(!d.success)return showToast('加载配置失败','error');const s=await apiRequest('/api/settings',{method:'POST',body:JSON.stringify({global_config:d.data.global,grok_config:kc})});if(!s)return;const sd=await s.json();sd.success?showToast('Grok配置保存成功','success'):showToast('保存失败: '+(sd.error||'未知错误'),'error')}catch(e){showToast('保存失败: '+e.message,'error')}};
-        const updateHoverCardPosition=(cardElement)=>{const trigger=cardElement.querySelector('.hover-card-trigger'),content=cardElement.querySelector('.hover-card-content');if(!trigger||!content)return;console.log('更新悬浮卡片位置',cardElement,trigger,content);const rect=trigger.getBoundingClientRect(),windowHeight=window.innerHeight,spaceAbove=rect.top,spaceBelow=windowHeight-rect.bottom;content.classList.remove('top','bottom');const originalVisibility=getComputedStyle(content).visibility,originalOpacity=getComputedStyle(content).opacity;content.style.visibility='hidden';content.style.opacity='1';const contentHeight=content.offsetHeight;content.style.visibility=originalVisibility;content.style.opacity=originalOpacity;const position=spaceAbove>contentHeight+10?'top':spaceBelow>contentHeight+10?'bottom':'top';content.classList.add(position);console.log('悬浮卡片位置:',position,'高度:',contentHeight,'上方空间:',spaceAbove,'下方空间:',spaceBelow)},
-        loadStorageMode=async()=>{try{const r=await apiRequest('/api/storage/mode');if(!r)return;const d=await r.json();if(d.success){const mode=d.data.mode;console.log('存储模式:',mode);$('storageModeText').textContent=mode;if(mode==='MYSQL'){$('storageMode').classList.add('bg-blue-50','text-blue-700','border-blue-200');$('storageModeTooltip').textContent='数据库连接模式 - 数据持久化存储，修改配置时可能稍慢但更安全'}else if(mode==='REDIS'){$('storageMode').classList.add('bg-purple-50','text-purple-700','border-purple-200');$('storageModeTooltip').textContent='Redis缓存模式 - 高速内存存储，数据持久化且读写性能极佳'}else{$('storageMode').classList.add('bg-green-50','text-green-700','border-green-200');$('storageModeTooltip').textContent='文件存储模式 - 本地文件存储，读写速度快'};updateHoverCardPosition($('storageMode').closest('.hover-card'))}}catch(e){console.error('加载存储模式失败:',e);$('storageModeText').textContent='FILE';$('storageMode').classList.add('bg-green-50','text-green-700','border-green-200');$('storageModeTooltip').textContent='文件存储模式 - 本地文件存储，读写速度快';updateHoverCardPosition($('storageMode').closest('.hover-card'))}};
+        logout=async()=>{if(!confirm('Are you sure you want to log out?'))return;try{await apiRequest('/api/logout',{method:'POST'})}catch(e){console.error('Logout failed:',e)}finally{localStorage.removeItem('adminToken');location.href='/login'}},
+        switchTab=t=>{['tokens','settings','cloudinary'].forEach(n=>{$(`panel${n.charAt(0).toUpperCase()+n.slice(1)}`).classList[n===t?'remove':'add']('hidden');$(`tab${n.charAt(0).toUpperCase()+n.slice(1)}`).classList[n===t?'add':'remove']('border-primary','text-primary');$(`tab${n.charAt(0).toUpperCase()+n.slice(1)}`).classList[n===t?'remove':'add']('border-transparent','text-muted-foreground')});if(t==='settings'){loadSettings()}else if(t==='cloudinary'){loadCloudinaryAccounts()}},
+        updateCacheProxyReadonly=()=>{const proxyUrl=$('cfgProxyUrl').value.trim(),cacheProxyInput=$('cfgCacheProxyUrl');if(proxyUrl){cacheProxyInput.readOnly=false;cacheProxyInput.classList.remove('bg-muted');cacheProxyInput.placeholder='socks5://username:password@127.0.0.1:7890'}else{cacheProxyInput.readOnly=true;cacheProxyInput.classList.add('bg-muted');cacheProxyInput.value='';cacheProxyInput.placeholder='Set service proxy to enable'}};
+        loadSettings=async()=>{try{const r=await apiRequest('/api/settings');if(!r)return;const d=await r.json();if(d.success){const g=d.data.global,k=d.data.grok;$('cfgAdminUser').value=g.admin_username||'';$('cfgAdminPass').value='';$('cfgLogLevel').value=g.log_level||'DEBUG';$('cfgImageCacheMaxSize').value=g.image_cache_max_size_mb||500;$('cfgVideoCacheMaxSize').value=g.video_cache_max_size_mb||1000;$('cfgImageMode').value=g.image_mode||'url';$('cfgBaseUrl').value=g.base_url||'';$('cfgApiKey').value=k.api_key||'';$('cfgProxyUrl').value=k.proxy_url||'';$('cfgCacheProxyUrl').value=k.cache_proxy_url||'';$('cfgCfClearance').value=k.cf_clearance||'';$('cfgStatsigId').value=k.x_statsig_id||'';$('cfgFilteredTags').value=k.filtered_tags||'';$('cfgTemporary').value=k.temporary!==false?'true':'false';$('cfgStreamChunkTimeout').value=k.stream_chunk_timeout||120;$('cfgStreamFirstResponseTimeout').value=k.stream_first_response_timeout||30;$('cfgStreamTotalTimeout').value=k.stream_total_timeout||600;updateCacheProxyReadonly();await loadCacheSize()}}catch(e){console.error('Failed to load settings:',e);showToast('Failed to load settings','error')}},
+        loadCloudinaryAccounts=async()=>{try{const r=await apiRequest('/api/cloudinary/accounts');if(!r)return;const d=await r.json();if(d.success){renderCloudinaryAccounts(d.data)}}catch(e){console.error('Failed to load Cloudinary accounts:',e)}},
+        renderCloudinaryAccounts=(accounts)=>{const tb=$('cloudinaryTableBody'),es=$('cloudinaryEmptyState');if(!accounts.length){tb.innerHTML='';es.classList.remove('hidden');return}es.classList.add('hidden');tb.innerHTML=accounts.map(acc=>`<tr><td class="p-3">${acc.cloud_name}</td><td class="p-3">${acc.api_key}</td><td class="p-3 text-right"><button onclick="deleteCloudinaryAccount('${acc.api_key}')" class="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive h-7 w-7"><svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td></tr>`).join('')},
+        openAddCloudinaryModal=()=>$('addCloudinaryModal').classList.remove('hidden'),
+        closeAddCloudinaryModal=()=>{['addCloudinaryCloudName','addCloudinaryApiKey','addCloudinaryApiSecret'].forEach(id=>$(id).value='');$('addCloudinaryModal').classList.add('hidden')},
+        submitAddCloudinaryAccount=async()=>{const acc={cloud_name:$('addCloudinaryCloudName').value,api_key:$('addCloudinaryApiKey').value,api_secret:$('addCloudinaryApiSecret').value};if(!acc.cloud_name||!acc.api_key||!acc.api_secret)return alert('Please fill in all fields');try{const r=await apiRequest('/api/cloudinary/accounts/add',{method:'POST',body:JSON.stringify({accounts:[acc]})});if(!r)return;const d=await r.json();d.success?(closeAddCloudinaryModal(),loadCloudinaryAccounts()):alert('Add failed: '+(d.error||'Unknown error'))}catch(e){alert('Add failed: '+e.message)}},
+        deleteCloudinaryAccount=async(apiKey)=>{if(!confirm('Are you sure you want to delete this Cloudinary account?'))return;try{const r=await apiRequest('/api/cloudinary/accounts/delete',{method:'POST',body:JSON.stringify({api_keys:[apiKey]})});if(!r)return;const d=await r.json();d.success?loadCloudinaryAccounts():alert('Delete failed: '+(d.error||'Unknown error'))}catch(e){alert('Delete failed: '+e.message)}},
+        loadCacheSize=async()=>{try{const r=await apiRequest('/api/cache/size');if(!r)return;const d=await r.json();if(d.success){$('imageCacheSize').value=d.data.image_size||'0 MB';$('videoCacheSize').value=d.data.video_size||'0 MB';$('totalCacheSize').value=d.data.total_size||'0 MB'}}catch(e){console.error('Failed to load cache size:',e);$('imageCacheSize').value='0 MB';$('videoCacheSize').value='0 MB';$('totalCacheSize').value='0 MB'}},
+        clearImageCache=async()=>{if(!confirm('Are you sure you want to clear the image cache? This will delete all cached image files!'))return;try{const r=await apiRequest('/api/cache/clear/images',{method:'POST'});if(!r)return;const d=await r.json();d.success?(showToast(`Image cache cleared, ${d.data.deleted_count||0} files deleted`,'success'),await loadCacheSize()):showToast('Clear failed: '+(d.error||'Unknown error'),'error')}catch(e){showToast('Clear failed: '+e.message,'error')}},
+        clearVideoCache=async()=>{if(!confirm('Are you sure you want to clear the video cache? This will delete all cached video files!'))return;try{const r=await apiRequest('/api/cache/clear/videos',{method:'POST'});if(!r)return;const d=await r.json();d.success?(showToast(`Video cache cleared, ${d.data.deleted_count||0} files deleted`,'success'),await loadCacheSize()):showToast('Clear failed: '+(d.error||'Unknown error'),'error')}catch(e){showToast('Clear failed: '+e.message,'error')}},
+        clearCache=async()=>{if(!confirm('Are you sure you want to clear the cache? This will delete all files in the /data/temp directory!'))return;try{const r=await apiRequest('/api/cache/clear',{method:'POST'});if(!r)return;const d=await r.json();d.success?(showToast(`Cache cleared, ${d.data.deleted_count||0} files deleted`,'success'),await loadCacheSize()):showToast('Clear failed: '+(d.error||'Unknown error'),'error')}catch(e){showToast('Clear failed: '+e.message,'error')}},
+        saveGlobalSettings=async()=>{const gc={admin_username:$('cfgAdminUser').value,log_level:$('cfgLogLevel').value,image_cache_max_size_mb:parseInt($('cfgImageCacheMaxSize').value)||500,video_cache_max_size_mb:parseInt($('cfgVideoCacheMaxSize').value)||1000,image_mode:$('cfgImageMode').value,base_url:$('cfgBaseUrl').value};if($('cfgAdminPass').value)gc.admin_password=$('cfgAdminPass').value;try{const r=await apiRequest('/api/settings');if(!r)return;const d=await r.json();if(!d.success)return showToast('Failed to load settings','error');const s=await apiRequest('/api/settings',{method:'POST',body:JSON.stringify({global_config:gc,grok_config:d.data.grok})});if(!s)return;const sd=await s.json();sd.success?(showToast('Global settings saved successfully','success'),$('cfgAdminPass').value=''):showToast('Save failed: '+(sd.error||'Unknown error'),'error')}catch(e){showToast('Save failed: '+e.message,'error')}},
+        saveGrokSettings=async()=>{const pu=$('cfgProxyUrl').value.trim(),kc={api_key:$('cfgApiKey').value,proxy_url:pu,cache_proxy_url:pu?$('cfgCacheProxyUrl').value:'',cf_clearance:$('cfgCfClearance').value,x_statsig_id:$('cfgStatsigId').value,filtered_tags:$('cfgFilteredTags').value,temporary:$('cfgTemporary').value==='true',stream_chunk_timeout:parseInt($('cfgStreamChunkTimeout').value)||120,stream_first_response_timeout:parseInt($('cfgStreamFirstResponseTimeout').value)||30,stream_total_timeout:parseInt($('cfgStreamTotalTimeout').value)||600};try{const r=await apiRequest('/api/settings');if(!r)return;const d=await r.json();if(!d.success)return showToast('Failed to load settings','error');const s=await apiRequest('/api/settings',{method:'POST',body:JSON.stringify({global_config:d.data.global,grok_config:kc})});if(!s)return;const sd=await s.json();sd.success?showToast('Grok settings saved successfully','success'):showToast('Save failed: '+(sd.error||'Unknown error'),'error')}catch(e){showToast('Save failed: '+e.message,'error')}};
+        const updateHoverCardPosition=(cardElement)=>{const trigger=cardElement.querySelector('.hover-card-trigger'),content=cardElement.querySelector('.hover-card-content');if(!trigger||!content)return;console.log('Updating hover card position',cardElement,trigger,content);const rect=trigger.getBoundingClientRect(),windowHeight=window.innerHeight,spaceAbove=rect.top,spaceBelow=windowHeight-rect.bottom;content.classList.remove('top','bottom');const originalVisibility=getComputedStyle(content).visibility,originalOpacity=getComputedStyle(content).opacity;content.style.visibility='hidden';content.style.opacity='1';const contentHeight=content.offsetHeight;content.style.visibility=originalVisibility;content.style.opacity=originalOpacity;const position=spaceAbove>contentHeight+10?'top':spaceBelow>contentHeight+10?'bottom':'top';content.classList.add(position);console.log('Hover card position:',position,'Height:',contentHeight,'Space above:',spaceAbove,'Space below:',spaceBelow)},
+        loadStorageMode=async()=>{try{const r=await apiRequest('/api/storage/mode');if(!r)return;const d=await r.json();if(d.success){const mode=d.data.mode;console.log('Storage mode:',mode);$('storageModeText').textContent=mode;if(mode==='MYSQL'){$('storageMode').classList.add('bg-blue-50','text-blue-700','border-blue-200');$('storageModeTooltip').textContent='Database Connection Mode - Data is persisted, slower to modify but safer'}else if(mode==='REDIS'){$('storageMode').classList.add('bg-purple-50','text-purple-700','border-purple-200');$('storageModeTooltip').textContent='Redis Cache Mode - High-speed in-memory storage, data is persisted with excellent read/write performance'}else{$('storageMode').classList.add('bg-green-50','text-green-700','border-green-200');$('storageModeTooltip').textContent='File Storage Mode - Local file storage, fast read/write speed'};updateHoverCardPosition($('storageMode').closest('.hover-card'))}}catch(e){console.error('Failed to load storage mode:',e);$('storageModeText').textContent='FILE';$('storageMode').classList.add('bg-green-50','text-green-700','border-green-200');$('storageModeTooltip').textContent='File Storage Mode - Local file storage, fast read/write speed';updateHoverCardPosition($('storageMode').closest('.hover-card'))}};
         window.addEventListener('DOMContentLoaded',()=>{checkAuth();loadStorageMode();refreshTokens();setInterval(()=>{loadStats();updateRemaining()},30000);window.addEventListener('resize',()=>{const hoverCard=$('storageMode').closest('.hover-card');hoverCard&&updateHoverCardPosition(hoverCard)});const hoverCard=$('storageMode').closest('.hover-card'),trigger=hoverCard?.querySelector('.hover-card-trigger'),content=hoverCard?.querySelector('.hover-card-content');if(trigger&&content){trigger.addEventListener('mouseenter',()=>{content.style.opacity='1';content.style.visibility='visible'});trigger.addEventListener('mouseleave',()=>{content.style.opacity='0';content.style.visibility='hidden'})};$('cfgProxyUrl').addEventListener('input',updateCacheProxyReadonly)});
     </script>
 </body>

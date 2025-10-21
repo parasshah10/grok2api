@@ -16,6 +16,7 @@ from app.core.config import setting
 from app.core.logger import logger
 from app.services.grok.token import token_manager
 from app.models.grok_models import TokenType
+from app.services.cloudinary import cloudinary_token_manager
 
 
 # 创建路由器
@@ -76,6 +77,23 @@ class TokenListResponse(BaseModel):
     success: bool
     data: List[TokenInfo]
     total: int
+
+
+class CloudinaryAccount(BaseModel):
+    """Cloudinary账户"""
+    cloud_name: str
+    api_key: str
+    api_secret: str
+
+
+class AddCloudinaryAccountsRequest(BaseModel):
+    """添加Cloudinary账户请求"""
+    accounts: List[CloudinaryAccount]
+
+
+class DeleteCloudinaryAccountsRequest(BaseModel):
+    """删除Cloudinary账户请求"""
+    api_keys: List[str]
 
 
 # === 辅助函数 ===
@@ -719,3 +737,36 @@ async def get_storage_mode(_: bool = Depends(verify_admin_session)) -> Dict[str,
             status_code=500,
             detail={"error": f"获取存储模式失败: {str(e)}", "code": "STORAGE_MODE_ERROR"}
         )
+
+
+@router.get("/api/cloudinary/accounts")
+async def list_cloudinary_accounts(_: bool = Depends(verify_admin_session)):
+    """获取Cloudinary账户列表"""
+    try:
+        accounts = cloudinary_token_manager.get_accounts()
+        return {"success": True, "data": accounts}
+    except Exception as e:
+        logger.error(f"[Admin] 获取Cloudinary账户列表异常 - 错误: {str(e)}")
+        raise HTTPException(status_code=500, detail={"error": f"获取Cloudinary账户列表失败: {str(e)}", "code": "LIST_CLOUDINARY_ACCOUNTS_ERROR"})
+
+
+@router.post("/api/cloudinary/accounts/add")
+async def add_cloudinary_accounts(request: AddCloudinaryAccountsRequest, _: bool = Depends(verify_admin_session)):
+    """添加Cloudinary账户"""
+    try:
+        await cloudinary_token_manager.add_accounts([acc.dict() for acc in request.accounts])
+        return {"success": True, "message": "Cloudinary账户添加成功"}
+    except Exception as e:
+        logger.error(f"[Admin] 添加Cloudinary账户异常 - 错误: {str(e)}")
+        raise HTTPException(status_code=500, detail={"error": f"添加Cloudinary账户失败: {str(e)}", "code": "ADD_CLOUDINARY_ACCOUNTS_ERROR"})
+
+
+@router.post("/api/cloudinary/accounts/delete")
+async def delete_cloudinary_accounts(request: DeleteCloudinaryAccountsRequest, _: bool = Depends(verify_admin_session)):
+    """删除Cloudinary账户"""
+    try:
+        await cloudinary_token_manager.delete_accounts(request.api_keys)
+        return {"success": True, "message": "Cloudinary账户删除成功"}
+    except Exception as e:
+        logger.error(f"[Admin] 删除Cloudinary账户异常 - 错误: {str(e)}")
+        raise HTTPException(status_code=500, detail={"error": f"删除Cloudinary账户失败: {str(e)}", "code": "DELETE_CLOUDINARY_ACCOUNTS_ERROR"})
