@@ -5,6 +5,7 @@
 """
 
 import secrets
+import re
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -88,7 +89,7 @@ class CloudinaryAccount(BaseModel):
 
 class AddCloudinaryAccountsRequest(BaseModel):
     """添加Cloudinary账户请求"""
-    accounts: List[CloudinaryAccount]
+    urls: List[str]
 
 
 class DeleteCloudinaryAccountsRequest(BaseModel):
@@ -750,12 +751,29 @@ async def list_cloudinary_accounts(_: bool = Depends(verify_admin_session)):
         raise HTTPException(status_code=500, detail={"error": f"获取Cloudinary账户列表失败: {str(e)}", "code": "LIST_CLOUDINARY_ACCOUNTS_ERROR"})
 
 
+def parse_cloudinary_url(cloudinary_url):
+    """Parses a Cloudinary URL into credentials."""
+    match = re.match(r'cloudinary://([^:]+):([^@]+)@(.+)', cloudinary_url)
+    if not match:
+        raise ValueError(f"Invalid Cloudinary URL format: {cloudinary_url}")
+    api_key, api_secret, cloud_name = match.groups()
+    return {
+        'cloud_name': cloud_name,
+        'api_key': api_key,
+        'api_secret': api_secret
+    }
+
+
 @router.post("/api/cloudinary/accounts/add")
 async def add_cloudinary_accounts(request: AddCloudinaryAccountsRequest, _: bool = Depends(verify_admin_session)):
     """添加Cloudinary账户"""
     try:
-        await cloudinary_token_manager.add_accounts([acc.dict() for acc in request.accounts])
+        accounts = [parse_cloudinary_url(url) for url in request.urls]
+        await cloudinary_token_manager.add_accounts(accounts)
         return {"success": True, "message": "Cloudinary账户添加成功"}
+    except ValueError as e:
+        logger.error(f"[Admin] 添加Cloudinary账户失败: 无效的URL格式 - {str(e)}")
+        raise HTTPException(status_code=400, detail={"error": str(e), "code": "INVALID_CLOUDINARY_URL"})
     except Exception as e:
         logger.error(f"[Admin] 添加Cloudinary账户异常 - 错误: {str(e)}")
         raise HTTPException(status_code=500, detail={"error": f"添加Cloudinary账户失败: {str(e)}", "code": "ADD_CLOUDINARY_ACCOUNTS_ERROR"})
