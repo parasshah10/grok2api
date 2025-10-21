@@ -2,15 +2,14 @@
 
 import base64
 import re
-from typing import Tuple, Optional
-from urllib.parse import urlparse
+from typing import Tuple
 
 from curl_cffi.requests import AsyncSession
 
-from app.services.grok.statsig import get_dynamic_headers
-from app.core.exception import GrokApiException
 from app.core.config import setting
+from app.core.exception import GrokApiException
 from app.core.logger import logger
+from app.services.grok.statsig import get_dynamic_headers
 
 # 常量定义
 UPLOAD_ENDPOINT = "https://grok.com/rest/app-chat/upload-file"
@@ -23,52 +22,99 @@ DEFAULT_EXTENSION = "jpg"
 class ImageUploadManager:
     """
     Grok图片上传管理器
-    
+
     提供图片上传功能，支持：
     - Base64格式图片上传
     - URL图片下载并上传
-    - 多种图片格式支持
     """
 
     @staticmethod
     async def upload(image_input: str, auth_token: str) -> str:
-        """上传图片到Grok，支持Base64或URL"""
+        """
+        上传图片到Grok，自动检测并处理URL或Base64数据URI。
+        """
         try:
-            if ImageUploadManager._is_url(image_input):
-                # 下载 URL 图片
-                image_buffer, mime_type = await ImageUploadManager._download(image_input)
-
-                # 获取图片信息
-                file_name, _ = ImageUploadManager._get_info("", mime_type)
-
+            if ImageUploadManager._is_base64_uri(image_input):
+                logger.debug("[Upload] 检测到Base64数据URI，开始处理")
+                image_bytes, mime_type = ImageUploadManager._decode_base64_uri(image_input)
             else:
-                # 处理 base64 数据
-                image_buffer = image_input.split(",")[1] if "data:image" in image_input else image_input
+                logger.debug(f"[Upload] 检测到URL: {image_input}，开始下载")
+                image_bytes, mime_type = await ImageUploadManager._download_url(image_input)
 
-                # 获取图片信息
-                file_name, mime_type = ImageUploadManager._get_info(image_input)
+            if not image_bytes:
+                logger.warning("[Upload] 无法获取图片数据，上传失败")
+                return ""
 
-            # 构建上传数据
-            upload_data = {
+            return await ImageUploadManager._upload_bytes(image_bytes, mime_type, auth_token)
+
+        except Exception as e:
+            logger.error(f"[Upload] 上传图片时发生意外错误: {e}")
+            return ""
+
+    @staticmethod
+    def _is_base64_uri(uri: str) -> bool:
+        """检查输入是否为Base64数据URI"""
+        return uri.strip().startswith("data:image") and ";base64," in uri
+
+    @staticmethod
+    def _decode_base64_uri(uri: str) -> Tuple[bytes, str]:
+        """解码Base64数据URI"""
+        try:
+            header, encoded = uri.split(",", 1)
+            mime_match = re.search(r"data:(image/[a-zA-Z0-9-.+]+);base64", header)
+            mime_type = mime_match.group(1) if mime_match else DEFAULT_MIME_TYPE
+
+            decoded_bytes = base64.b64decode(encoded)
+            return decoded_bytes, mime_type
+        except (ValueError, IndexError) as e:
+            logger.error(f"[Upload] 解码Base64 URI失败: {e}")
+            return b"", DEFAULT_MIME_TYPE
+
+    @staticmethod
+    async def _download_url(url: str) -> Tuple[bytes, str]:
+        """从URL下载图片"""
+        try:
+            async with AsyncSession() as session:
+                response = await session.get(url, timeout=REQUEST_TIMEOUT)
+                response.raise_for_status()
+
+                content_type = response.headers.get('content-type', DEFAULT_MIME_TYPE)
+                if not content_type.startswith('image/'):
+                    logger.warning(f"[Upload] URL返回的MIME类型不是图片: {content_type}，使用默认值")
+                    content_type = DEFAULT_MIME_TYPE
+
+                return response.content, content_type
+        except Exception as e:
+            logger.error(f"[Upload] 下载图片URL失败: {url}, 错误: {e}")
+            return b"", DEFAULT_MIME_TYPE
+
+    @staticmethod
+    async def _upload_bytes(image_bytes: bytes, mime_type: str, auth_token: str) -> str:
+        """将图片字节上传到Grok"""
+        if not auth_token:
+            raise GrokApiException("认证令牌缺失或为空", "NO_AUTH_TOKEN")
+
+        try:
+            # 准备请求
+            base64_content = base64.b64encode(image_bytes).decode('utf-8')
+            extension = mime_type.split("/")[-1] if "/" in mime_type else DEFAULT_EXTENSION
+            file_name = f"image.{extension}"
+
+            payload = {
                 "fileName": file_name,
                 "fileMimeType": mime_type,
-                "content": image_buffer,
+                "content": base64_content,
             }
-
-            # 获取认证令牌
-            if not auth_token:
-                raise GrokApiException("认证令牌缺失或为空", "NO_AUTH_TOKEN")
 
             cf_clearance = setting.grok_config.get("cf_clearance", "")
             cookie = f"{auth_token};{cf_clearance}" if cf_clearance else auth_token
-            
-            proxy_url = setting.grok_config.get("proxy_url", "")
+
+            proxy_url = setting.get_service_proxy()
+            proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+
             if proxy_url:
                 logger.debug(f"[Upload] 使用代理: {proxy_url.split('@')[-1] if '@' in proxy_url else proxy_url}")
 
-            proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
-
-            # 发送异步请求
             async with AsyncSession() as session:
                 response = await session.post(
                     UPLOAD_ENDPOINT,
@@ -76,74 +122,18 @@ class ImageUploadManager:
                         **get_dynamic_headers("/rest/app-chat/upload-file"),
                         "Cookie": cookie,
                     },
-                    json=upload_data,
+                    json=payload,
                     impersonate=IMPERSONATE_BROWSER,
                     timeout=REQUEST_TIMEOUT,
                     proxies=proxies,
                 )
 
-                # 检查响应
-                if response.status_code == 200:
-                    result = response.json()
-                    file_id = result.get("fileMetadataId", "")
-                    logger.debug(f"[Upload] 图片上传成功，文件ID: {file_id}")
-                    return file_id
-
-            return ""
-
-        except Exception as e:
-            logger.warning(f"[Upload] 上传图片失败: {e}")
-            return ""
-
-    @staticmethod
-    def _is_url(image_input: str) -> bool:
-        """检查输入是否为有效的URL"""
-        try:
-            result = urlparse(image_input)
-            return all([result.scheme, result.netloc]) and result.scheme in ['http', 'https']
-        except Exception as e:
-            logger.warning(f"[Upload] URL解析失败: {e}")
-            return False
-
-    @staticmethod
-    async def _download(url: str) -> Tuple[str, str]:
-        """下载图片并转换为Base64"""
-        try:
-            async with AsyncSession() as session:
-                response = await session.get(url, timeout=5)
                 response.raise_for_status()
+                result = response.json()
+                file_id = result.get("fileMetadataId", "")
+                logger.debug(f"[Upload] 图片上传成功，文件ID: {file_id}")
+                return file_id
 
-                # 获取内容类型
-                content_type = response.headers.get('content-type', DEFAULT_MIME_TYPE)
-                if not content_type.startswith('image/'):
-                    content_type = DEFAULT_MIME_TYPE
-
-                # 转换为 Base64
-                image_base64 = base64.b64encode(response.content).decode('utf-8')
-                return image_base64, content_type
         except Exception as e:
-            logger.warning(f"[Upload] 下载图片失败: {e}")
-            return "", ""
-
-    @staticmethod
-    def _get_info(image_data: str, mime_type: Optional[str] = None) -> Tuple[str, str]:
-        """获取图片文件名和MIME类型"""
-        # mime_type 有值，直接使用
-        if mime_type:
-            extension = mime_type.split("/")[1] if "/" in mime_type else DEFAULT_EXTENSION
-            file_name = f"image.{extension}"
-            return file_name, mime_type
-
-        # mime_type 没有值，使用默认值
-        mime_type = DEFAULT_MIME_TYPE
-        extension = DEFAULT_EXTENSION
-
-        # 从 Base64 数据中提取 MIME 类型
-        if "data:image" in image_data:
-            match = re.search(r"data:([a-zA-Z0-9]+/[a-zA-Z0-9-.+]+);base64,", image_data)
-            if match:
-                mime_type = match.group(1)
-                extension = mime_type.split("/")[1]
-
-        file_name = f"image.{extension}"
-        return file_name, mime_type
+            logger.error(f"[Upload] 上传图片字节失败: {e}")
+            return ""

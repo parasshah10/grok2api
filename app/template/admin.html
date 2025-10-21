@@ -29,7 +29,7 @@
     </script>
 </head>
 <body class="h-full bg-background text-foreground antialiased">
-    <!-- 导航栏 -->
+    <!-- Navigation Bar -->
     <header class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div class="mx-auto flex h-14 max-w-7xl items-center px-6">
             <div class="mr-4 flex items-baseline gap-3">
@@ -79,7 +79,7 @@
     </header>
 
     <main class="mx-auto max-w-7xl px-6 py-6">
-        <!-- Tab 导航 -->
+        <!-- Tab Navigation -->
         <div class="border-b border-border mb-6">
             <nav class="flex space-x-8">
                 <button onclick="switchTab('tokens')" id="tabTokens" class="tab-btn border-b-2 border-primary text-sm font-medium py-3 px-1">Token Management</button>
@@ -88,9 +88,9 @@
             </nav>
         </div>
 
-        <!-- Token 管理面板 -->
+        <!-- Token Management Panel -->
         <div id="panelTokens">
-        <!-- 统计卡片 -->
+        <!-- Statistics Cards -->
         <div class="grid gap-4 grid-cols-2 md:grid-cols-4 mb-6">
             <div class="rounded-lg border border-border bg-background p-4">
                 <p class="text-sm font-medium text-muted-foreground mb-2">Total Tokens</p>
@@ -133,9 +133,9 @@
             </div>
         </div>
 
-        <!-- Token 列表 -->
+        <!-- Token List -->
         <div class="rounded-lg border border-border bg-background">
-            <!-- 工具栏 -->
+            <!-- Toolbar -->
             <div class="flex items-center justify-between gap-4 p-4 border-b border-border">
                 <div class="flex items-center gap-3 flex-1">
                     <div class="flex items-center gap-2">
@@ -146,10 +146,10 @@
                         </select>
                         <select id="filterStatus" onchange="filterTokens()" class="h-8 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring">
                             <option value="all">All Statuses</option>
-                            <option value="未使用">Unused</option>
-                            <option value="限流中">Rate-Limited</option>
-                            <option value="失效">Expired</option>
-                            <option value="正常">Active</option>
+                            <option value="Unused">Unused</option>
+                            <option value="Rate-Limited">Rate-Limited</option>
+                            <option value="Expired">Expired</option>
+                            <option value="Active">Active</option>
                         </select>
                     </div>
                 </div>
@@ -205,7 +205,7 @@
                 </div>
             </div>
             
-            <!-- 表格 -->
+            <!-- Table -->
             <div class="relative w-full overflow-auto">
                 <table class="w-full text-sm table-fixed">
                     <thead>
@@ -228,7 +228,7 @@
                         </tr>
                     </thead>
                     <tbody id="tokenTableBody" class="divide-y divide-border">
-                        <!-- 动态填充 -->
+                        <!-- Dynamic Content -->
                     </tbody>
                 </table>
             </div>
@@ -243,16 +243,16 @@
         </div>
         </div>
 
-        <!-- 全局设置面板 -->
+        <!-- Global Settings Panel -->
         <div id="panelSettings" class="hidden">
-            <!-- 全局配置区域 -->
+            <!-- Global Configuration Area -->
             <div class="mb-8">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-xl font-bold">Global Settings</h2>
                     <button onclick="saveGlobalSettings()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-black hover:text-white h-9 px-4 transition-colors">Save Settings</button>
                 </div>
                 <div class="grid gap-4 lg:grid-cols-3">
-                    <!-- 系统设置 -->
+                    <!-- System Settings -->
                     <div class="rounded-lg border border-border bg-background p-6">
                         <h3 class="text-sm font-semibold mb-4">System Settings</h3>
                         <div class="space-y-4">
@@ -282,7 +282,7 @@
                         </div>
                     </div>
 
-                    <!-- 媒体设置 -->
+                    <!-- Media Settings -->
                     <div class="rounded-lg border border-border bg-background p-6">
                         <h3 class="text-sm font-semibold mb-4">Media Settings</h3>
                         <div class="space-y-4">
@@ -322,7 +322,7 @@
                         </div>
                     </div>
 
-                    <!-- 缓存管理 -->
+                    <!-- Cache Management -->
                     <div class="rounded-lg border border-border bg-background p-6">
                         <h3 class="text-sm font-semibold mb-4">Cache Management</h3>
                         <div class="space-y-4">
@@ -364,14 +364,14 @@
                 </div>
             </div>
 
-            <!-- Grok 配置区域 -->
+            <!-- Grok Configuration Area -->
             <div>
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-xl font-bold">Grok Settings</h2>
                     <button onclick="saveGrokSettings()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-black hover:text-white h-9 px-4 transition-colors">Save Settings</button>
                 </div>
                 <div class="grid gap-4 lg:grid-cols-3">
-                    <!-- 基础设置 -->
+                    <!-- Basic Settings -->
                     <div class="rounded-lg border border-border bg-background p-6">
                         <h3 class="text-sm font-semibold mb-4">Basic Settings</h3>
                         <div class="space-y-4">
@@ -409,7 +409,7 @@
                         </div>
                     </div>
 
-                    <!-- 代理设置 -->
+                    <!-- Proxy Settings -->
                     <div class="rounded-lg border border-border bg-background p-6">
                         <h3 class="text-sm font-semibold mb-4">Proxy Settings</h3>
                         <div class="space-y-4">
@@ -437,7 +437,7 @@
                         </div>
                     </div>
 
-                    <!-- 超时设置 -->
+                    <!-- Timeout Settings -->
                     <div class="rounded-lg border border-border bg-background p-6">
                         <h3 class="text-sm font-semibold mb-4">Timeout Settings</h3>
                         <div class="space-y-4">
@@ -467,7 +467,7 @@
                 </div>
             </div>
 
-            <!-- 配置提示 -->
+            <!-- Configuration Notes -->
             <div class="mt-8 rounded border border-blue-300 bg-blue-50 px-4 py-3">
                 <div class="text-xs text-gray-800 leading-relaxed">
                     <div class="text-base font-medium text-gray-900 mb-2.5">Notes</div>
@@ -481,7 +481,7 @@
             </div>
         </div>
 
-        <!-- Cloudinary 配置面板 -->
+        <!-- Cloudinary Configuration Panel -->
         <div id="panelCloudinary" class="hidden">
             <div class="rounded-lg border border-border bg-background">
                 <div class="flex items-center justify-between gap-4 p-4 border-b border-border">
@@ -522,7 +522,7 @@
         </div>
     </main>
 
-    <!-- 添加 Cloudinary 账户模态框 -->
+    <!-- Add Cloudinary Account Modal -->
     <div id="addCloudinaryModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
         <div class="bg-background rounded-lg border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
             <div class="flex items-center justify-between p-5 border-b border-border">
@@ -536,16 +536,13 @@
             </div>
             <div class="p-5 space-y-4">
                 <div class="space-y-2">
-                    <label class="text-sm font-medium text-muted-foreground">Cloud Name</label>
-                    <input id="addCloudinaryCloudName" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Cloud Name">
-                </div>
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-muted-foreground">API Key</label>
-                    <input id="addCloudinaryApiKey" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="API Key">
-                </div>
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-muted-foreground">API Secret</label>
-                    <input id="addCloudinaryApiSecret" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="API Secret">
+                    <label class="text-sm font-medium text-muted-foreground">Account List (JSON format)</label>
+                    <textarea
+                        id="addCloudinaryAccountList"
+                        rows="12"
+                        placeholder='[{"cloud_name": "name1", "api_key": "key1", "api_secret": "secret1"}, ...]'
+                        class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono resize-none"
+                    ></textarea>
                 </div>
             </div>
             <div class="flex items-center justify-end gap-3 p-5 border-t border-border bg-muted/30">
@@ -565,7 +562,7 @@
         </div>
     </div>
 
-    <!-- 添加 Token 模态框 -->
+    <!-- Add Token Modal -->
     <div id="addModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
         <div class="bg-background rounded-lg border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl">
             <div class="flex items-center justify-between p-5 border-b border-border">
@@ -622,11 +619,11 @@
         loadTokens=async()=>{try{const r=await apiRequest('/api/tokens');if(!r)return;const d=await r.json();d.success&&(allTokens=d.data,filteredTokens=allTokens,selectedTokens.clear(),renderTokens(),updateRemaining())}catch(e){console.error('Failed to load list:',e)}},
         updateRemaining=()=>{const r=calcRemaining();['Total','Normal','Heavy'].forEach(k=>$(`stat${k}Remaining`).textContent=r[k.toLowerCase()]===0?'-':r[k.toLowerCase()].toLocaleString())}
 
-        const renderTokens=()=>{const tb=$('tokenTableBody'),es=$('emptyState'),ss={'未使用':'bg-muted text-muted-foreground','限流中':'bg-orange-50 text-orange-700 border-orange-200','失效':'bg-destructive/10 text-destructive border-destructive/20','正常':'bg-green-50 text-green-700 border-green-200'},ts={sso:'bg-blue-50 text-blue-700 border-blue-200',ssoSuper:'bg-purple-50 text-purple-700 border-purple-200'},tl={sso:'SSO',ssoSuper:'SuperSSO'};if(!filteredTokens.length){tb.innerHTML='';es.classList.remove('hidden');$('selectAll').checked=false;return updateBatchActions()}es.classList.add('hidden');tb.innerHTML=filteredTokens.map(t=>`<tr class="transition-colors"><td class="py-2.5 px-3 align-middle w-12"><input type="checkbox" class="token-checkbox h-3.5 w-3.5 rounded border border-input focus:ring-1 focus:ring-ring" data-token="${t.token}" data-type="${t.token_type}" ${selectedTokens.has(t.token)?'checked':''} onchange="toggleToken('${t.token}')"></td><td class="py-2.5 px-3 align-middle w-80"><div class="flex items-center gap-2"><span class="font-mono text-xs">${t.token.substring(0,30)}...</span><button onclick="copyToken('${t.token.replace(/'/g,"\\'")}',event)" class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent h-6 w-6" title="Copy Full Token"><svg class="h-3 w-3 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div></td><td class="py-2.5 px-3 align-middle w-20"><span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border ${ts[t.token_type]}">${tl[t.token_type]}</span></td><td class="py-2.5 px-3 align-middle w-20"><span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border ${ss[t.status]}">${t.status}</span></td><td class="py-2.5 px-3 align-middle w-20 text-xs tabular-nums">${t.remaining_queries===-1?'-':t.remaining_queries}</td><td class="py-2.5 px-3 align-middle w-20 text-xs tabular-nums">${t.heavy_remaining_queries===-1?'-':t.heavy_remaining_queries}</td><td class="py-2.5 px-3 align-middle w-32 text-xs text-muted-foreground">${t.created_time?new Date(t.created_time).toLocaleString('en-US',{dateStyle:'short',timeStyle:'short'}):'-'}</td><td class="py-2.5 px-3 align-middle text-right w-16"><button onclick="deleteToken('${t.token}','${t.token_type}')" class="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive h-7 w-7"><svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td></tr>`).join('');updateBatchActions()},
+        const renderTokens=()=>{const tb=$('tokenTableBody'),es=$('emptyState'),ss={'Unused':'bg-muted text-muted-foreground','Rate-Limited':'bg-orange-50 text-orange-700 border-orange-200','Expired':'bg-destructive/10 text-destructive border-destructive/20','Active':'bg-green-50 text-green-700 border-green-200'},ts={sso:'bg-blue-50 text-blue-700 border-blue-200',ssoSuper:'bg-purple-50 text-purple-700 border-purple-200'},tl={sso:'SSO',ssoSuper:'SuperSSO'};if(!filteredTokens.length){tb.innerHTML='';es.classList.remove('hidden');$('selectAll').checked=false;return updateBatchActions()}es.classList.add('hidden');tb.innerHTML=filteredTokens.map(t=>`<tr class="transition-colors"><td class="py-2.5 px-3 align-middle w-12"><input type="checkbox" class="token-checkbox h-3.5 w-3.5 rounded border border-input focus:ring-1 focus:ring-ring" data-token="${t.token}" data-type="${t.token_type}" ${selectedTokens.has(t.token)?'checked':''} onchange="toggleToken('${t.token}')"></td><td class="py-2.5 px-3 align-middle w-80"><div class="flex items-center gap-2"><span class="font-mono text-xs">${t.token.substring(0,30)}...</span><button onclick="copyToken('${t.token.replace(/'/g,"\\'")}',event)" class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent h-6 w-6" title="Copy Full Token"><svg class="h-3 w-3 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div></td><td class="py-2.5 px-3 align-middle w-20"><span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border ${ts[t.token_type]}">${tl[t.token_type]}</span></td><td class="py-2.5 px-3 align-middle w-20"><span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border ${ss[t.status]}">${t.status}</span></td><td class="py-2.5 px-3 align-middle w-20 text-xs tabular-nums">${t.remaining_queries===-1?'-':t.remaining_queries}</td><td class="py-2.5 px-3 align-middle w-20 text-xs tabular-nums">${t.heavy_remaining_queries===-1?'-':t.heavy_remaining_queries}</td><td class="py-2.5 px-3 align-middle w-32 text-xs text-muted-foreground">${t.created_time?new Date(t.created_time).toLocaleString('en-US',{dateStyle:'short',timeStyle:'short'}):'-'}</td><td class="py-2.5 px-3 align-middle text-right w-16"><button onclick="deleteToken('${t.token}','${t.token_type}')" class="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive h-7 w-7"><svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td></tr>`).join('');updateBatchActions()},
         toggleToken=t=>selectedTokens[selectedTokens.has(t)?'delete':'add'](t)||updateBatchActions(),
         toggleSelectAll=()=>{const sa=$('selectAll');sa.checked?filteredTokens.forEach(t=>selectedTokens.add(t.token)):selectedTokens.clear();renderTokens()},
         updateBatchActions=()=>{const ba=$('batchActions'),sc=$('selectedCount'),c=selectedTokens.size;ba.classList[c>0?'add':'remove']('flex');ba.classList[c>0?'remove':'add']('hidden');c>0&&(sc.textContent=`${c} selected`);$('selectAll').checked=filteredTokens.length>0&&c===filteredTokens.length},
-        filterTokens=()=>{const tf=$('filterType').value,sf=$('filterStatus').value;filteredTokens=allTokens.filter(t=>(tf==='all'||t.token_type===tf)&&(sf==='all'||t.status===sf));selectedTokens.clear();renderTokens()},
+        filterTokens=()=>{const tf=$('filterType').value,sf=$('filterStatus').value;filteredTokens=allTokens.filter(t=>(tf==='all'||t.token_type===tf)&&(sf==='all'||t.status===sf.replace('-','')));selectedTokens.clear();renderTokens()},
         refreshTokens=async()=>{await loadTokens();await loadStats()},
         openAddModal=()=>$('addModal').classList.remove('hidden'),
         closeAddModal=()=>{$('addModal').classList.add('hidden');$('addTokenList').value=''},
@@ -644,8 +641,8 @@
         loadCloudinaryAccounts=async()=>{try{const r=await apiRequest('/api/cloudinary/accounts');if(!r)return;const d=await r.json();if(d.success){renderCloudinaryAccounts(d.data)}}catch(e){console.error('Failed to load Cloudinary accounts:',e)}},
         renderCloudinaryAccounts=(accounts)=>{const tb=$('cloudinaryTableBody'),es=$('cloudinaryEmptyState');if(!accounts.length){tb.innerHTML='';es.classList.remove('hidden');return}es.classList.add('hidden');tb.innerHTML=accounts.map(acc=>`<tr><td class="p-3">${acc.cloud_name}</td><td class="p-3">${acc.api_key}</td><td class="p-3 text-right"><button onclick="deleteCloudinaryAccount('${acc.api_key}')" class="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive h-7 w-7"><svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td></tr>`).join('')},
         openAddCloudinaryModal=()=>$('addCloudinaryModal').classList.remove('hidden'),
-        closeAddCloudinaryModal=()=>{['addCloudinaryCloudName','addCloudinaryApiKey','addCloudinaryApiSecret'].forEach(id=>$(id).value='');$('addCloudinaryModal').classList.add('hidden')},
-        submitAddCloudinaryAccount=async()=>{const acc={cloud_name:$('addCloudinaryCloudName').value,api_key:$('addCloudinaryApiKey').value,api_secret:$('addCloudinaryApiSecret').value};if(!acc.cloud_name||!acc.api_key||!acc.api_secret)return alert('Please fill in all fields');try{const r=await apiRequest('/api/cloudinary/accounts/add',{method:'POST',body:JSON.stringify({accounts:[acc]})});if(!r)return;const d=await r.json();d.success?(closeAddCloudinaryModal(),loadCloudinaryAccounts()):alert('Add failed: '+(d.error||'Unknown error'))}catch(e){alert('Add failed: '+e.message)}},
+        closeAddCloudinaryModal=()=>{$('addCloudinaryAccountList').value='';$('addCloudinaryModal').classList.add('hidden')},
+        submitAddCloudinaryAccount=async()=>{const jsonInput=$('addCloudinaryAccountList').value;if(!jsonInput)return alert('Please enter at least one account');try{const accounts=JSON.parse(jsonInput);if(!Array.isArray(accounts)||!accounts.length)return alert('Invalid JSON format. Please provide an array of accounts.');const r=await apiRequest('/api/cloudinary/accounts/add',{method:'POST',body:JSON.stringify({accounts:accounts})});if(!r)return;const d=await r.json();d.success?(closeAddCloudinaryModal(),loadCloudinaryAccounts()):alert('Add failed: '+(d.error||'Unknown error'))}catch(e){alert('Add failed: '+e.message)}},
         deleteCloudinaryAccount=async(apiKey)=>{if(!confirm('Are you sure you want to delete this Cloudinary account?'))return;try{const r=await apiRequest('/api/cloudinary/accounts/delete',{method:'POST',body:JSON.stringify({api_keys:[apiKey]})});if(!r)return;const d=await r.json();d.success?loadCloudinaryAccounts():alert('Delete failed: '+(d.error||'Unknown error'))}catch(e){alert('Delete failed: '+e.message)}},
         loadCacheSize=async()=>{try{const r=await apiRequest('/api/cache/size');if(!r)return;const d=await r.json();if(d.success){$('imageCacheSize').value=d.data.image_size||'0 MB';$('videoCacheSize').value=d.data.video_size||'0 MB';$('totalCacheSize').value=d.data.total_size||'0 MB'}}catch(e){console.error('Failed to load cache size:',e);$('imageCacheSize').value='0 MB';$('videoCacheSize').value='0 MB';$('totalCacheSize').value='0 MB'}},
         clearImageCache=async()=>{if(!confirm('Are you sure you want to clear the image cache? This will delete all cached image files!'))return;try{const r=await apiRequest('/api/cache/clear/images',{method:'POST'});if(!r)return;const d=await r.json();d.success?(showToast(`Image cache cleared, ${d.data.deleted_count||0} files deleted`,'success'),await loadCacheSize()):showToast('Clear failed: '+(d.error||'Unknown error'),'error')}catch(e){showToast('Clear failed: '+e.message,'error')}},
