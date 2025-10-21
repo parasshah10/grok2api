@@ -13,3 +13,7 @@ fastmcp==2.12.4
 cryptography==46.0.3
 
 cloudinary==1.44.1
+
+Pillow>=10.5.0
+
+pillow-heif>=0.17.0

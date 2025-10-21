@@ -5,6 +5,10 @@ import base64
 from pathlib import Path
 from typing import Optional
 from curl_cffi.requests import AsyncSession
+from PIL import Image
+from pillow_heif import register_heif_opener
+
+register_heif_opener()
 
 from app.core.config import setting
 from app.core.logger import logger
@@ -114,7 +118,25 @@ class ImageCacheService(CacheService):
 
     async def download_image(self, image_path: str, auth_token: str) -> Optional[Path]:
         """下载并缓存图片"""
-        return await self.download_file(image_path, auth_token, timeout=30.0)
+        cache_path = await self.download_file(image_path, auth_token, timeout=30.0)
+        if not cache_path:
+            return None
+
+        # 如果是avif格式，转换为png
+        if cache_path.suffix.lower() == '.avif':
+            try:
+                with Image.open(cache_path) as img:
+                    png_path = cache_path.with_suffix('.png')
+                    img.save(png_path, 'PNG')
+                    logger.debug(f"[ImageCache] AVIF图片已转换为PNG: {png_path}")
+                    # 删除旧的avif文件
+                    cache_path.unlink()
+                    return png_path
+            except Exception as e:
+                logger.error(f"[ImageCache] AVIF转PNG失败: {e}")
+                return None  # 或者返回原始路径
+
+        return cache_path
 
     def get_cached(self, image_path: str) -> Optional[Path]:
         """获取缓存的图片路径"""

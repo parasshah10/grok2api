@@ -2,6 +2,7 @@
 
 import json
 import asyncio
+import aiofiles
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
@@ -52,7 +53,7 @@ class CloudinaryTokenManager:
         try:
             if not self._storage:
                 async with self._file_lock:
-                    async with open(self.token_file, "w", encoding="utf-8") as f:
+                    async with aiofiles.open(self.token_file, "w", encoding="utf-8") as f:
                         await f.write(json.dumps(self.token_data, indent=2, ensure_ascii=False))
             else:
                 await self._storage.save_cloudinary_tokens(self.token_data)
