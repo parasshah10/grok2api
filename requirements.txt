@@ -12,4 +12,4 @@ redis==6.4.0
 fastmcp==2.12.4
 cryptography==46.0.3
 
-cloudinary==1.40.0
+cloudinary==1.44.1
