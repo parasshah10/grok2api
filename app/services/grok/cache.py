@@ -1,4 +1,4 @@
-"""缓存服务模块"""
+"""Cache Service Module"""
 
 import asyncio
 import base64
@@ -16,24 +16,24 @@ from app.services.grok.statsig import get_dynamic_headers
 
 
 class CacheService:
-    """缓存服务基类"""
+    """Cache Service Base Class"""
 
     def __init__(self, cache_type: str):
-        """初始化缓存服务"""
+        """Initialize Cache Service"""
         self.cache_type = cache_type
         self.cache_dir = Path(f"data/temp/{cache_type}")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def _cache_path(self, file_path: str) -> Path:
-        """获取缓存文件的完整路径"""
+        """Get full path of cache file"""
         filename = file_path.lstrip('/').replace('/', '-')
         return self.cache_dir / filename
 
     async def download_file(self, file_path: str, auth_token: str, timeout: float = 30.0) -> Optional[Path]:
-        """下载并缓存文件"""
+        """Download and cache file"""
         cache_path = self._cache_path(file_path)
         if cache_path.exists():
-            logger.debug(f"[{self.cache_type.upper()}Cache] 文件已缓存: {cache_path}")
+            logger.debug(f"[{self.cache_type.upper()}Cache] File cached: {cache_path}")
             return cache_path
 
         try:
@@ -50,15 +50,15 @@ class CacheService:
                 "Cookie": f"{auth_token};{cf_clearance}" if cf_clearance else auth_token
             }
 
-            # 使用缓存代理
+            # Use cache proxy
             proxy_url = setting.get_cache_proxy()
             proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else {}
             
             if proxy_url:
-                logger.debug(f"[{self.cache_type.upper()}Cache] 使用缓存代理: {proxy_url.split('@')[-1] if '@' in proxy_url else proxy_url}")
+                logger.debug(f"[{self.cache_type.upper()}Cache] Using cache proxy: {proxy_url.split('@')[-1] if '@' in proxy_url else proxy_url}")
 
             async with AsyncSession() as session:
-                logger.debug(f"[{self.cache_type.upper()}Cache] 开始下载: https://assets.grok.com{file_path}")
+                logger.debug(f"[{self.cache_type.upper()}Cache] Start downloading: https://assets.grok.com{file_path}")
                 response = await session.get(
                     f"https://assets.grok.com{file_path}",
                     headers=headers,
@@ -69,20 +69,20 @@ class CacheService:
                 )
                 response.raise_for_status()
                 cache_path.write_bytes(response.content)
-                logger.debug(f"[{self.cache_type.upper()}Cache] 文件已缓存: {cache_path} ({len(response.content)} bytes)")
+                logger.debug(f"[{self.cache_type.upper()}Cache] File cached: {cache_path} ({len(response.content)} bytes)")
                 asyncio.create_task(self.cleanup_cache())
                 return cache_path
         except Exception as e:
-            logger.error(f"[{self.cache_type.upper()}Cache] 下载文件失败: {e}")
+            logger.error(f"[{self.cache_type.upper()}Cache] Failed to download file: {e}")
             return None
 
     def get_cached(self, file_path: str) -> Optional[Path]:
-        """获取缓存的文件路径"""
+        """Get cached file path"""
         cache_path = self._cache_path(file_path)
         return cache_path if cache_path.exists() else None
 
     async def cleanup_cache(self):
-        """清理缓存目录，确保不超过配置的大小限制"""
+        """Clean up cache directory to ensure it doesn't exceed size limit"""
         try:
             max_size_mb = setting.global_config.get(f"{self.cache_type}_cache_max_size_mb", 500)
             max_size_bytes = max_size_mb * 1024 * 1024
@@ -92,10 +92,10 @@ class CacheService:
             total_size = sum(size for _, size, _ in files)
 
             if total_size <= max_size_bytes:
-                logger.debug(f"[{self.cache_type.upper()}Cache] 缓存大小 {total_size / 1024 / 1024:.2f}MB，未超限")
+                logger.debug(f"[{self.cache_type.upper()}Cache] Cache size {total_size / 1024 / 1024:.2f}MB, within limit")
                 return
 
-            logger.info(f"[{self.cache_type.upper()}Cache] 缓存大小 {total_size / 1024 / 1024:.2f}MB 超过限制 {max_size_mb}MB，开始清理")
+            logger.info(f"[{self.cache_type.upper()}Cache] Cache size {total_size / 1024 / 1024:.2f}MB exceeds limit {max_size_mb}MB, starting cleanup")
             files.sort(key=lambda x: x[2])
 
             for file_path, size, _ in files:
@@ -103,51 +103,51 @@ class CacheService:
                     break
                 file_path.unlink()
                 total_size -= size
-                logger.debug(f"[{self.cache_type.upper()}Cache] 已删除缓存文件: {file_path}")
+                logger.debug(f"[{self.cache_type.upper()}Cache] Deleted cache file: {file_path}")
 
-            logger.info(f"[{self.cache_type.upper()}Cache] 缓存清理完成，当前大小 {total_size / 1024 / 1024:.2f}MB")
+            logger.info(f"[{self.cache_type.upper()}Cache] Cleanup complete, current size {total_size / 1024 / 1024:.2f}MB")
         except Exception as e:
-            logger.error(f"[{self.cache_type.upper()}Cache] 清理缓存失败: {e}")
+            logger.error(f"[{self.cache_type.upper()}Cache] Cleanup failed: {e}")
 
 
 class ImageCacheService(CacheService):
-    """图片缓存服务"""
+    """Image Cache Service"""
 
     def __init__(self):
         super().__init__("image")
 
     async def download_image(self, image_path: str, auth_token: str) -> Optional[Path]:
-        """下载并缓存图片"""
+        """Download and cache image"""
         cache_path = await self.download_file(image_path, auth_token, timeout=30.0)
         if not cache_path:
             return None
 
-        # 如果是avif格式，转换为png
+        # If avif format, convert to png
         if cache_path.suffix.lower() == '.avif':
             try:
                 with Image.open(cache_path) as img:
                     png_path = cache_path.with_suffix('.png')
                     img.save(png_path, 'PNG')
-                    logger.debug(f"[ImageCache] AVIF图片已转换为PNG: {png_path}")
-                    # 删除旧的avif文件
+                    logger.debug(f"[ImageCache] AVIF image converted to PNG: {png_path}")
+                    # Delete old avif file
                     cache_path.unlink()
                     return png_path
             except Exception as e:
-                logger.error(f"[ImageCache] AVIF转PNG失败: {e}")
-                return None  # 或者返回原始路径
+                logger.error(f"[ImageCache] AVIF to PNG conversion failed: {e}")
+                return None  # Or return original path
 
         return cache_path
 
     def get_cached(self, image_path: str) -> Optional[Path]:
-        """获取缓存的图片路径"""
+        """Get cached image path"""
         return super().get_cached(image_path)
 
     @staticmethod
     def to_base64(image_path: Path) -> Optional[str]:
-        """将图片转换为 base64 编码"""
+        """Convert image to base64 encoding"""
         try:
             if not image_path.exists():
-                logger.error(f"[ImageCache] 图片文件不存在: {image_path}")
+                logger.error(f"[ImageCache] Image file does not exist: {image_path}")
                 return None
 
             with open(image_path, "rb") as f:
@@ -158,11 +158,11 @@ class ImageCacheService(CacheService):
 
             return f"data:{mime_type};base64,{base64_data}"
         except Exception as e:
-            logger.error(f"[ImageCache] 图片转 base64 失败: {e}")
+            logger.error(f"[ImageCache] Image to base64 failed: {e}")
             return None
 
     async def download_base64(self, image_path: str, auth_token: str) -> Optional[str]:
-        """下载图片并转换为 base64 编码（转换后立即删除缓存文件）"""
+        """Download image and convert to base64 encoding (delete cache file immediately after conversion)"""
         try:
             cache_path = await self.download_file(image_path, auth_token, timeout=30.0)
             if not cache_path:
@@ -172,31 +172,31 @@ class ImageCacheService(CacheService):
 
             try:
                 cache_path.unlink()
-                logger.debug(f"[ImageCache] 已删除临时文件: {cache_path}")
+                logger.debug(f"[ImageCache] Temporary file deleted: {cache_path}")
             except Exception as e:
-                logger.warning(f"[ImageCache] 删除临时文件失败: {e}")
+                logger.warning(f"[ImageCache] Failed to delete temporary file: {e}")
 
             return base64_str
         except Exception as e:
-            logger.error(f"[ImageCache] 下载并转换 base64 失败: {e}")
+            logger.error(f"[ImageCache] Download and convert base64 failed: {e}")
             return None
 
 
 class VideoCacheService(CacheService):
-    """视频缓存服务"""
+    """Video Cache Service"""
 
     def __init__(self):
         super().__init__("video")
 
     async def download_video(self, video_path: str, auth_token: str) -> Optional[Path]:
-        """下载并缓存视频"""
+        """Download and cache video"""
         return await self.download_file(video_path, auth_token, timeout=60.0)
 
     def get_cached(self, video_path: str) -> Optional[Path]:
-        """获取缓存的视频路径"""
+        """Get cached video path"""
         return super().get_cached(video_path)
 
 
-# 全局实例
+# Global Instances
 image_cache_service = ImageCacheService()
 video_cache_service = VideoCacheService()

@@ -1,4 +1,4 @@
-"""异常处理器"""
+"""Exception Handler"""
 
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
@@ -7,7 +7,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 class GrokApiException(Exception):
-    """Grok API 业务异常"""
+    """Grok API Business Exception"""
 
     def __init__(self, message: str, error_code: str = None, details: dict = None):
         self.message = message
@@ -17,7 +17,7 @@ class GrokApiException(Exception):
 
 
 def build_error_response(message: str, error_type: str, code: str = None, param: str = None) -> dict:
-    """构建OpenAI兼容的错误响应"""
+    """Build OpenAI-compatible error response"""
     error = {
         "message": message,
         "type": error_type,
@@ -31,15 +31,15 @@ def build_error_response(message: str, error_type: str, code: str = None, param:
 
 
 async def http_exception_handler(_: Request, exc: StarletteHTTPException) -> JSONResponse:
-    """处理HTTP异常"""
+    """Handle HTTP Exceptions"""
     error_map = {
-        400: ("invalid_request_error", "请求格式错误或缺少必填参数。"),
-        401: ("invalid_request_error", "令牌认证失败。"),
-        403: ("permission_error", "没有权限访问此资源。"),
-        404: ("invalid_request_error", "请求的资源不存在。"),
-        429: ("rate_limit_error", "请求频率超出限制，请稍后再试。"),
-        500: ("api_error", "内部服务器错误。"),
-        503: ("api_error", "服务暂时不可用。"),
+        400: ("invalid_request_error", "Request format error or missing required parameters."),
+        401: ("invalid_request_error", "Token authentication failed."),
+        403: ("permission_error", "No permission to access this resource."),
+        404: ("invalid_request_error", "Requested resource does not exist."),
+        429: ("rate_limit_error", "Request rate limit exceeded, please try again later."),
+        500: ("api_error", "Internal Server Error."),
+        503: ("api_error", "Service unavailable."),
     }
 
     error_type, default_message = error_map.get(exc.status_code, ("api_error", str(exc.detail)))
@@ -52,10 +52,10 @@ async def http_exception_handler(_: Request, exc: StarletteHTTPException) -> JSO
 
 
 async def validation_exception_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
-    """处理验证错误"""
+    """Handle Validation Errors"""
     errors = exc.errors()
     param = errors[0]["loc"][-1] if errors and errors[0].get("loc") else None
-    message = errors[0]["msg"] if errors and errors[0].get("msg") else "请求参数错误。"
+    message = errors[0]["msg"] if errors and errors[0].get("msg") else "Request parameter error."
 
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
@@ -64,8 +64,8 @@ async def validation_exception_handler(_: Request, exc: RequestValidationError) 
 
 
 async def grok_api_exception_handler(_: Request, exc: GrokApiException) -> JSONResponse:
-    """处理Grok API业务异常"""
-    # 根据错误码映射HTTP状态码
+    """Handle Grok API Business Exceptions"""
+    # Map error codes to HTTP status codes
     status_code_map = {
         "NO_AUTH_TOKEN": status.HTTP_401_UNAUTHORIZED,
         "INVALID_TOKEN": status.HTTP_401_UNAUTHORIZED,
@@ -102,18 +102,18 @@ async def grok_api_exception_handler(_: Request, exc: GrokApiException) -> JSONR
 
 
 async def global_exception_handler(_: Request, exc: Exception) -> JSONResponse:
-    """处理未捕获异常"""
+    """Handle Uncaught Exceptions"""
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=build_error_response(
-            "服务器遇到意外错误，请重试。",
+            "The server encountered an unexpected error, please retry.",
             "api_error"
         )
     )
 
 
 def register_exception_handlers(app) -> None:
-    """注册OpenAI兼容的异常处理器"""
+    """Register OpenAI-compatible exception handlers"""
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(GrokApiException, grok_api_exception_handler)

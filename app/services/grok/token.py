@@ -1,4 +1,4 @@
-"""Grok Token 管理器模块"""
+"""Grok Token Manager Module"""
 
 import json
 import time
@@ -14,37 +14,37 @@ from app.core.logger import logger
 from app.core.config import setting
 from app.services.grok.statsig import get_dynamic_headers
 
-# 常量定义
+# Constant Definition
 RATE_LIMIT_ENDPOINT = "https://grok.com/rest/rate-limits"
 REQUEST_TIMEOUT = 30
 IMPERSONATE_BROWSER = "chrome133a"
 MAX_FAILURE_COUNT = 3
-TOKEN_INVALID_CODE = 401  # SSO Token失效
-STATSIG_INVALID_CODE = 403  # x-statsig-id失效
+TOKEN_INVALID_CODE = 401  # SSO Token invalid
+STATSIG_INVALID_CODE = 403  # x-statsig-id invalid
 
 
 class GrokTokenManager:
     """
-    Grok Token管理器
+    Grok Token Manager
     
-    单例模式的Token管理器，负责：
-    - Token文件的读写操作
-    - Token负载均衡
-    - Token状态管理
-    - 支持普通Token和Super Token
+    Singleton Token Manager, responsible for:
+    - Token file read/write operations
+    - Token load balancing
+    - Token status management
+    - Support for normal Token and Super Token
     """
     
     _instance: Optional['GrokTokenManager'] = None
     _lock = asyncio.Lock()
 
     def __new__(cls) -> 'GrokTokenManager':
-        """单例模式实现"""
+        """Singleton implementation"""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
-        """初始化Token管理器"""
+        """Initialize Token Manager"""
         if hasattr(self, '_initialized'):
             return
 
@@ -53,19 +53,19 @@ class GrokTokenManager:
         self.token_file.parent.mkdir(parents=True, exist_ok=True)
         self._storage = None
 
-        # 同步加载初始数据
+        # Sync load initial data
         self._load_data()
         self._initialized = True
         self.video_token_index = 0
  
-        logger.debug(f"[Token] 管理器初始化完成，文件: {self.token_file}")
+        logger.debug(f"[Token] Manager initialized, file: {self.token_file}")
  
     def set_storage(self, storage) -> None:
-        """设置存储实例"""
+        """Set storage instance"""
         self._storage = storage
 
     def _load_data(self) -> None:
-        """同步加载Token数据（仅用于初始化）"""
+        """Sync load Token data (for initialization only)"""
         default_data = {
             TokenType.NORMAL.value: {},
             TokenType.SUPER.value: {}
@@ -77,55 +77,55 @@ class GrokTokenManager:
                     self.token_data = json.load(f)
             else:
                 self.token_data = default_data
-                logger.debug("[Token] 创建新的Token数据文件")
+                logger.debug("[Token] Created new Token data file")
         except (json.JSONDecodeError, IOError) as e:
-            logger.error(f"[Token] 加载Token数据失败: {str(e)}")
+            logger.error(f"[Token] Failed to load Token data: {str(e)}")
             self.token_data = default_data
 
     async def _save_data(self) -> None:
-        """异步保存Token数据到存储"""
+        """Async save Token data to storage"""
         try:
             if not self._storage:
-                # 如果没有设置存储，使用传统文件保存方式（向后兼容）
+                # If no storage set, use legacy file saving (backward compatibility)
                 async with self._file_lock:
                     async with aiofiles.open(self.token_file, "w", encoding="utf-8") as f:
                         await f.write(json.dumps(self.token_data, indent=2, ensure_ascii=False))
             else:
-                # 使用存储抽象层
+                # Use storage abstraction layer
                 await self._storage.save_tokens(self.token_data)
         except IOError as e:
-            logger.error(f"[Token] 保存Token数据失败: {str(e)}")
+            logger.error(f"[Token] Failed to save Token data: {str(e)}")
             raise GrokApiException(
-                f"Token数据保存失败: {str(e)}",
+                f"Token data save failed: {str(e)}",
                 "TOKEN_SAVE_ERROR",
                 {"file_path": str(self.token_file)}
             )
 
     @staticmethod
     def _extract_sso(auth_token: str) -> Optional[str]:
-        """从认证令牌中提取SSO值"""
+        """Extract SSO value from auth token"""
         if "sso=" in auth_token:
             return auth_token.split("sso=")[1].split(";")[0]
-        logger.warning("[Token] 无法从认证令牌中提取SSO值")
+        logger.warning("[Token] Cannot extract SSO value from auth token")
         return None
 
     def _find_token(self, sso_value: str) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
-        """查找Token数据，返回(token_type, token_data)"""
+        """Find Token data, return (token_type, token_data)"""
         for token_type in [TokenType.NORMAL.value, TokenType.SUPER.value]:
             if sso_value in self.token_data[token_type]:
                 return token_type, self.token_data[token_type][sso_value]
         return None, None
 
     async def add_token(self, tokens: list[str], token_type: TokenType) -> None:
-        """添加Token到管理器"""
+        """Add Token to manager"""
         if not tokens:
-            logger.debug("[Token] 尝试添加空的Token列表")
+            logger.debug("[Token] Attempting to add empty Token list")
             return
 
         added_count = 0
         for token in tokens:
             if not token or not token.strip():
-                logger.debug("[Token] 跳过空的Token")
+                logger.debug("[Token] Skipping empty Token")
                 continue
 
             self.token_data[token_type.value][token] = {
@@ -140,12 +140,12 @@ class GrokTokenManager:
             added_count += 1
 
         await self._save_data()
-        logger.info(f"[Token] 成功添加 {added_count} 个 {token_type.value} Token")
+        logger.info(f"[Token] Successfully added {added_count} {token_type.value} Tokens")
 
     async def delete_token(self, tokens: list[str], token_type: TokenType) -> None:
-        """删除指定的Token"""
+        """Delete specified Token"""
         if not tokens:
-            logger.debug("[Token] 尝试删除空的Token列表")
+            logger.debug("[Token] Attempting to delete empty Token list")
             return
 
         deleted_count = 0
@@ -154,22 +154,22 @@ class GrokTokenManager:
                 del self.token_data[token_type.value][token]
                 deleted_count += 1
             else:
-                logger.debug(f"[Token] Token不存在: {token[:10]}...")
+                logger.debug(f"[Token] Token does not exist: {token[:10]}...")
 
         await self._save_data()
-        logger.info(f"[Token] 成功删除 {deleted_count} 个 {token_type.value} Token")
+        logger.info(f"[Token] Successfully deleted {deleted_count} {token_type.value} Tokens")
     
     def get_tokens(self) -> Dict[str, Any]:
-        """获取所有Token数据"""
+        """Get all Token data"""
         return self.token_data.copy()
 
     def get_token(self, model: str) -> str:
-        """获取指定模型的Token"""
+        """Get Token for specified model"""
         jwt_token = self.select_token(model)
         return f"sso-rw={jwt_token};sso={jwt_token}"
     
     def select_token(self, model: str) -> str:
-        """根据模型类型和剩余次数选择最优Token"""
+        """Select best Token based on model type and remaining queries"""
         model_info = Models.get_model_info(model)
         if model_info.get("is_video_model"):
             active_tokens = [
@@ -196,32 +196,32 @@ class GrokTokenManager:
             logger.debug(f"[Token] Round-robin selection for video model: Chose token at index {self.video_token_index - 1}")
             return selected_token
         def select_best_token(tokens_dict: Dict[str, Any]) -> Tuple[Optional[str], Optional[int]]:
-            """从 token 字典中选择最佳 token"""
-            unused_tokens = []  # remaining = -1 的 token
-            used_tokens = []    # remaining > 0 的 token
+            """Select best token from token dict"""
+            unused_tokens = []  # remaining = -1 tokens
+            used_tokens = []    # remaining > 0 tokens
  
             for token_key, token_data in tokens_dict.items():
-                # 跳过已失效的Token
+                # Skip expired tokens
                 if token_data.get("status") == "expired":
                     continue
  
                 remaining = int(token_data.get(remaining_field, -1))
  
-                # 跳过已限流的 token
+                # Skip rate-limited tokens
                 if remaining == 0:
                     continue
  
-                # 分类存储
+                # Categorize storage
                 if remaining == -1:
                     unused_tokens.append(token_key)
                 elif remaining > 0:
                     used_tokens.append((token_key, remaining))
  
-            # 优先返回尚未使用的 token
+            # Prefer unused tokens
             if unused_tokens:
                 return unused_tokens[0], -1
  
-            # 否则返回次数最多的 token
+            # Otherwise return token with most remaining queries
             if used_tokens:
                 used_tokens.sort(key=lambda x: x[1], reverse=True)
                 return used_tokens[0][0], used_tokens[0][1]
@@ -231,30 +231,30 @@ class GrokTokenManager:
         max_token_key = None
         max_remaining = None
  
-        # 深拷贝
+        # Deep copy
         token_data_snapshot = {
             TokenType.NORMAL.value: self.token_data[TokenType.NORMAL.value].copy(),
             TokenType.SUPER.value: self.token_data[TokenType.SUPER.value].copy()
         }
  
         if model == "grok-4-heavy":
-            # grok-4-heavy 只能使用Super Token + heavy remaining queries
+            # grok-4-heavy can only use Super Token + heavy remaining queries
             remaining_field = "heavyremainingQueries"
             max_token_key, max_remaining = select_best_token(token_data_snapshot[TokenType.SUPER.value])
         else:
-            # 其他模型使用 remaining Queries
+            # Other models use remaining Queries
             remaining_field = "remainingQueries"
  
-            # 优先使用普通Token
+            # Prefer normal Token
             max_token_key, max_remaining = select_best_token(token_data_snapshot[TokenType.NORMAL.value])
  
-            # 如果普通Token没有可用的，尝试使用Super Token
+            # If no normal Token available, try Super Token
             if max_token_key is None:
                 max_token_key, max_remaining = select_best_token(token_data_snapshot[TokenType.SUPER.value])
  
         if max_token_key is None:
             raise GrokApiException(
-                f"没有可用Token用于模型 {model}",
+                f"No available Token for model {model}",
                 "NO_AVAILABLE_TOKEN",
                 {
                     "model": model,
@@ -263,17 +263,17 @@ class GrokTokenManager:
                 }
             )
  
-        status_text = "未使用" if max_remaining == -1 else f"剩余{max_remaining}次"
-        logger.debug(f"[Token] 为模型 {model} 选择Token ({status_text})")
+        status_text = "Unused" if max_remaining == -1 else f"Remaining {max_remaining}"
+        logger.debug(f"[Token] Selected Token for model {model} ({status_text})")
         return max_token_key
     
     async def check_limits(self, auth_token: str, model: str) -> Optional[Dict[str, Any]]:
-        """检查并更新模型速率限制"""
+        """Check and update model rate limits"""
         try:
             rate_limit_model_name = Models.to_rate_limit(model)
-            logger.debug(f"[Token] 检查模型 {model} (接口模型: {rate_limit_model_name}) 的速率限制")
+            logger.debug(f"[Token] Checking rate limits for model {model} (API model: {rate_limit_model_name})")
 
-            # 准备请求
+            # Prepare request
             payload = {"requestKind": "DEFAULT", "modelName": rate_limit_model_name}
             cf_clearance = setting.grok_config.get("cf_clearance", "")
             cookie = f"{auth_token};{cf_clearance}" if cf_clearance else auth_token
@@ -281,14 +281,14 @@ class GrokTokenManager:
             headers = get_dynamic_headers("/rest/rate-limits")
             headers["Cookie"] = cookie
 
-            # 获取代理配置
+            # Get proxy config
             proxy_url = setting.grok_config.get("proxy_url", "")
             proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
             
             if proxy_url:
-                logger.debug(f"[Token] 使用代理: {proxy_url.split('@')[-1] if '@' in proxy_url else proxy_url}")
+                logger.debug(f"[Token] Using proxy: {proxy_url.split('@')[-1] if '@' in proxy_url else proxy_url}")
 
-            # 发送异步请求
+            # Send async request
             async with AsyncSession() as session:
                 response = await session.post(
                     RATE_LIMIT_ENDPOINT,
@@ -301,29 +301,29 @@ class GrokTokenManager:
 
                 if response.status_code == 200:
                     rate_limit_data = response.json()
-                    logger.debug(f"[Token] 成功获取速率限制信息")
+                    logger.debug(f"[Token] Successfully retrieved rate limit info")
 
-                    # 保存速率限制信息
+                    # Save rate limit info
                     sso_value = self._extract_sso(auth_token)
                     if sso_value:
                         if model == "grok-4-heavy":
                             await self.update_limits(sso_value, normal=None, heavy=rate_limit_data.get("remainingQueries", -1))
-                            logger.info(f"[Token] 已更新限制: sso={sso_value[:10]}..., heavy={rate_limit_data.get('remainingQueries', -1)}")
+                            logger.info(f"[Token] Limits updated: sso={sso_value[:10]}..., heavy={rate_limit_data.get('remainingQueries', -1)}")
                         else:
                             await self.update_limits(sso_value, normal=rate_limit_data.get("remainingTokens", -1), heavy=None)
-                            logger.info(f"[Token] 已更新限制: sso={sso_value[:10]}..., 通用={rate_limit_data.get('remainingTokens', -1)}")
+                            logger.info(f"[Token] Limits updated: sso={sso_value[:10]}..., normal={rate_limit_data.get('remainingTokens', -1)}")
 
                     return rate_limit_data
                 else:
-                    logger.warning(f"[Token] 获取速率限制失败，状态码: {response.status_code}")
+                    logger.warning(f"[Token] Failed to get rate limits, status code: {response.status_code}")
                     return None
 
         except Exception as e:
-            logger.error(f"[Token] 检查速率限制时发生错误: {str(e)}")
+            logger.error(f"[Token] Error checking rate limits: {str(e)}")
             return None
 
     async def update_limits(self, sso_value: str, normal: Optional[int] = None, heavy: Optional[int] = None) -> None:
-        """更新Token限制信息"""
+        """Update Token limit info"""
         try:
             for token_type in [TokenType.NORMAL.value, TokenType.SUPER.value]:
                 if sso_value in self.token_data[token_type]:
@@ -333,32 +333,32 @@ class GrokTokenManager:
                         self.token_data[token_type][sso_value]["heavyremainingQueries"] = heavy
 
                     await self._save_data()
-                    logger.info(f"[Token] 已更新Token {sso_value[:10]}... 的限制信息")
+                    logger.info(f"[Token] Updated limits for Token {sso_value[:10]}...")
                     return
 
-            logger.warning(f"[Token] 未找到SSO值为 {sso_value[:10]}... 的Token")
+            logger.warning(f"[Token] Token with SSO value {sso_value[:10]}... not found")
 
         except Exception as e:
-            logger.error(f"[Token] 更新Token限制时发生错误: {str(e)}")
+            logger.error(f"[Token] Error updating Token limits: {str(e)}")
     
     async def record_failure(self, auth_token: str, status_code: int, error_message: str) -> None:
-        """记录Token失败信息
+        """Record Token failure info
 
-        错误码说明：
-        - 401: SSO Token失效，会标记Token为expired
-        - 403: 服务器IP被Block，不影响Token状态
+        Error code explanation:
+        - 401: SSO Token invalid, marks Token as expired
+        - 403: Server IP Blocked, does not affect Token status
 
         Args:
-            auth_token: 完整的认证Token (格式: sso-rw=xxx;sso=xxx)
-            status_code: HTTP状态码
-            error_message: 错误信息
+            auth_token: Full auth Token (format: sso-rw=xxx;sso=xxx)
+            status_code: HTTP status code
+            error_message: Error message
         """
         try:
-            # 403错误是服务器IP被Block，不是Token问题
+            # 403 error is Server IP Blocked, not a Token issue
             if status_code == STATSIG_INVALID_CODE:
                 logger.warning(
-                    f"[Token] 服务器IP被Block (403)，请 1. 更换服务器IP 2. 使用代理IP "
-                    f"3. 服务器登陆Grok.com，过盾后F12找到CF值填入后台设置"
+                    f"[Token] Server IP Blocked (403), please 1. Change server IP 2. Use proxy IP "
+                    f"3. Log in to Grok.com on server, pass CF check, then get CF value from F12 to fill in admin settings"
                 )
                 return
 
@@ -368,40 +368,40 @@ class GrokTokenManager:
 
             _, token_data = self._find_token(sso_value)
             if not token_data:
-                logger.warning(f"[Token] 未找到SSO值为 {sso_value[:10]}... 的Token")
+                logger.warning(f"[Token] Token with SSO value {sso_value[:10]}... not found")
                 return
 
-            # 更新失败计数
+            # Update failure count
             token_data["failedCount"] = token_data.get("failedCount", 0) + 1
             token_data["lastFailureTime"] = int(time.time() * 1000)
             token_data["lastFailureReason"] = f"{status_code}: {error_message}"
 
             logger.warning(
-                f"[Token] Token {sso_value[:10]}... 失败 (状态码: {status_code}), "
-                f"失败次数: {token_data['failedCount']}/{MAX_FAILURE_COUNT}, "
-                f"原因: {error_message}"
+                f"[Token] Token {sso_value[:10]}... failed (Status: {status_code}), "
+                f"Failures: {token_data['failedCount']}/{MAX_FAILURE_COUNT}, "
+                f"Reason: {error_message}"
             )
 
-            # 只有401错误（SSO Token失效）且失败次数达到上限时，标记为失效
+            # Only mark as expired if 401 error (SSO Token invalid) and failure count reaches max
             if status_code == TOKEN_INVALID_CODE and token_data["failedCount"] >= MAX_FAILURE_COUNT:
                 token_data["status"] = "expired"
                 logger.error(
-                    f"[Token] SSO Token {sso_value[:10]}... 已被标记为失效 "
-                    f"(连续401错误{token_data['failedCount']}次)"
+                    f"[Token] SSO Token {sso_value[:10]}... marked as expired "
+                    f"(Consecutive 401 errors: {token_data['failedCount']})"
                 )
 
             await self._save_data()
 
         except Exception as e:
-            logger.error(f"[Token] 记录Token失败信息时发生错误: {str(e)}")
+            logger.error(f"[Token] Error recording Token failure info: {str(e)}")
 
     async def reset_failure(self, auth_token: str) -> None:
-        """重置Token失败计数
+        """Reset Token failure count
 
-        当Token成功完成请求时调用此方法，用于清除失败记录。
+        Called when Token successfully completes a request, used to clear failure record.
 
         Args:
-            auth_token: 完整的认证Token (格式: sso-rw=xxx;sso=xxx)
+            auth_token: Full auth Token (format: sso-rw=xxx;sso=xxx)
         """
         try:
             sso_value = self._extract_sso(auth_token)
@@ -410,21 +410,21 @@ class GrokTokenManager:
 
             _, token_data = self._find_token(sso_value)
             if not token_data:
-                logger.warning(f"[Token] 未找到SSO值为 {sso_value[:10]}... 的Token")
+                logger.warning(f"[Token] Token with SSO value {sso_value[:10]}... not found")
                 return
 
-            # 只有在有失败记录时才重置并保存
+            # Reset and save only if there are failure records
             if token_data.get("failedCount", 0) > 0:
                 token_data["failedCount"] = 0
                 token_data["lastFailureTime"] = None
                 token_data["lastFailureReason"] = None
 
                 await self._save_data()
-                logger.info(f"[Token] Token {sso_value[:10]}... 失败计数已重置")
+                logger.info(f"[Token] Token {sso_value[:10]}... failure count reset")
 
         except Exception as e:
-            logger.error(f"[Token] 重置Token失败计数时发生错误: {str(e)}")
+            logger.error(f"[Token] Error resetting Token failure count: {str(e)}")
 
 
-# 全局Token管理器实例
+# Global Token Manager Instance
 token_manager = GrokTokenManager()
