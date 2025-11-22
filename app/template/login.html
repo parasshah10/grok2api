@@ -5,50 +5,178 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Grok2API</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config={theme:{extend:{colors:{border:"hsl(0 0% 89%)",input:"hsl(0 0% 89%)",ring:"hsl(0 0% 3.9%)",background:"hsl(0 0% 100%)",foreground:"hsl(0 0% 3.9%)",primary:{DEFAULT:"hsl(0 0% 9%)",foreground:"hsl(0 0% 98%)"},secondary:{DEFAULT:"hsl(0 0% 96.1%)",foreground:"hsl(0 0% 9%)"},muted:{DEFAULT:"hsl(0 0% 96.1%)",foreground:"hsl(0 0% 45.1%)"},destructive:{DEFAULT:"hsl(0 84.2% 60.2%)",foreground:"hsl(0 0% 98%)"}}}}}
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        border: "hsl(var(--border))",
+                        input: "hsl(var(--input))",
+                        ring: "hsl(var(--ring))",
+                        background: "hsl(var(--background))",
+                        foreground: "hsl(var(--foreground))",
+                        primary: { DEFAULT: "hsl(var(--primary))", foreground: "hsl(var(--primary-foreground))" },
+                        secondary: { DEFAULT: "hsl(var(--secondary))", foreground: "hsl(var(--secondary-foreground))" },
+                        destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "hsl(var(--destructive-foreground))" },
+                        muted: { DEFAULT: "hsl(var(--muted))", foreground: "hsl(var(--muted-foreground))" },
+                        accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
+                        card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
+                    }
+                }
+            }
+        }
     </script>
     <style>
-        @keyframes slide-up{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
-        .animate-slide-up{animation:slide-up .3s ease-out}
+        :root {
+            --background: 0 0% 100%; --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%; --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%; --popover-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%; --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%; --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%; --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%; --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%; --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%; --input: 214.3 31.8% 91.4%; --ring: 222.2 84% 4.9%;
+            --radius: 0.5rem;
+        }
+        .dark {
+            --background: 222.2 84% 4.9%; --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%; --card-foreground: 210 40% 98%;
+            --popover: 222.2 84% 4.9%; --popover-foreground: 210 40% 98%;
+            --primary: 210 40% 98%; --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%; --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%; --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%; --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%; --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%; --input: 217.2 32.6% 17.5%; --ring: 212.7 26.8% 83.9%;
+        }
+        @keyframes slide-up { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
     </style>
 </head>
-<body class="h-full bg-background text-foreground antialiased">
-    <div class="flex min-h-full flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="text-center">
-                <h1 class="text-4xl font-bold">Grok2API</h1>
-                <p class="mt-2 text-sm text-muted-foreground">Admin Console</p>
-            </div>
-        </div>
-
-        <div class="sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="bg-background py-8 px-4 sm:px-10 rounded-lg">
-                <form id="loginForm" class="space-y-6">
-                    <div class="space-y-2">
-                        <label for="username" class="text-sm font-medium">Account</label>
-                        <input type="text" id="username" name="username" required class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50" placeholder="Enter account">
-                    </div>
-                    <div class="space-y-2">
-                        <label for="password" class="text-sm font-medium">Password</label>
-                        <input type="password" id="password" name="password" required class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50" placeholder="Enter password">
-                    </div>
-                    <button type="submit" id="loginButton" class="inline-flex items-center justify-center rounded-md font-medium transition-colors bg-primary text-primary-foreground hover:bg-primary/90 h-10 w-full disabled:opacity-50">Login</button>
-                </form>
-                
-                <div class="mt-6 text-center text-xs text-muted-foreground">
-                    <p>Created By Chenyme © 2025</p>
+<body class="h-full bg-background text-foreground antialiased flex items-center justify-center p-4">
+    <div class="w-full max-w-md space-y-8">
+        <div class="text-center">
+            <div class="flex justify-center">
+                <div class="h-12 w-12 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
             </div>
+            <h2 class="mt-6 text-3xl font-bold tracking-tight">Grok2API</h2>
+            <p class="mt-2 text-sm text-muted-foreground">Admin Console Login</p>
         </div>
+
+        <div class="bg-card border border-border rounded-xl shadow-sm p-8">
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-foreground mb-2">Account</label>
+                    <input type="text" id="username" name="username" required class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors" placeholder="admin">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-foreground mb-2">Password</label>
+                    <input type="password" id="password" name="password" required class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors" placeholder="••••••••">
+                </div>
+                <button type="submit" id="loginButton" class="flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    Sign in
+                </button>
+            </form>
+        </div>
+
+        <div class="flex justify-center">
+            <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground" title="Toggle Theme">
+                <svg id="themeIconSun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="themeIconMoon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </div>
+
+        <p class="text-center text-xs text-muted-foreground">
+            &copy; 2025 Grok2API. Created by Chenyme.
+        </p>
     </div>
 
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
     <script>
-        const form=document.getElementById('loginForm'),btn=document.getElementById('loginButton');
-        form.addEventListener('submit',async(e)=>{e.preventDefault();btn.disabled=true;btn.textContent='Logging in...';try{const fd=new FormData(form),r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:fd.get('username'),password:fd.get('password')})});const d=await r.json();d.success?(localStorage.setItem('adminToken',d.token),location.href='/manage'):showToast(d.message||'Login failed','error')}catch(e){showToast('Network error, please try again later','error')}finally{btn.disabled=false;btn.textContent='Login'}});
-        function showToast(m,t='error'){const d=document.createElement('div'),bc={success:'bg-green-600',error:'bg-destructive',info:'bg-primary'};d.className=`fixed bottom-4 right-4 ${bc[t]||bc.error} text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium z-50 animate-slide-up`;d.textContent=m;document.body.appendChild(d);setTimeout(()=>{d.style.opacity='0';d.style.transition='opacity .3s';setTimeout(()=>d.parentNode&&document.body.removeChild(d),300)},2000)}
-        window.addEventListener('DOMContentLoaded',()=>{const t=localStorage.getItem('adminToken');t&&fetch('/api/stats',{headers:{Authorization:`Bearer ${t}`}}).then(r=>{if(r.ok)location.href='/manage'})});
+        // Theme Logic
+        const initTheme = () => {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        };
+        const toggleTheme = () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+        };
+
+        const form = document.getElementById('loginForm');
+        const btn = document.getElementById('loginButton');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Signing in...';
+
+            try {
+                const fd = new FormData(form);
+                const r = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: fd.get('username'),
+                        password: fd.get('password')
+                    })
+                });
+                const d = await r.json();
+
+                if (d.success) {
+                    localStorage.setItem('adminToken', d.token);
+                    showToast('Login successful', 'success');
+                    setTimeout(() => location.href = '/manage', 500);
+                } else {
+                    showToast(d.message || 'Login failed', 'error');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (e) {
+                showToast('Network error, please try again later', 'error');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+
+        function showToast(msg, type = 'success') {
+            const c = document.getElementById('toast-container');
+            const colorClass = type === 'error' ? 'bg-destructive text-destructive-foreground' : 'bg-primary text-primary-foreground';
+            const el = document.createElement('div');
+            el.className = `pointer-events-auto flex items-center justify-between gap-4 rounded-md shadow-lg p-4 text-sm font-medium transition-all duration-300 transform translate-y-10 opacity-0 ${colorClass}`;
+            el.innerHTML = `<span>${msg}</span>`;
+            c.appendChild(el);
+
+            requestAnimationFrame(() => { el.classList.remove('translate-y-10', 'opacity-0'); });
+            setTimeout(() => {
+                el.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            const t = localStorage.getItem('adminToken');
+            if (t) {
+                fetch('/api/stats', { headers: { Authorization: `Bearer ${t}` } })
+                    .then(r => { if (r.ok) location.href = '/manage'; });
+            }
+        });
     </script>
 </body>
 </html>

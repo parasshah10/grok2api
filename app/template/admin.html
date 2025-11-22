@@ -1,672 +1,1027 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en" class="h-full" id="htmlRoot">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Console - Grok2API</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @keyframes slide-up{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
-        .animate-slide-up{animation:slide-up .3s ease-out}
-        .tab-btn{transition:all .2s ease}
-        .hover-card{position:relative;display:inline-block}
-        .hover-card-trigger{cursor:pointer}
-        .hover-card-content{position:absolute;left:50%;transform:translateX(-50%);background:hsl(0 0% 3.9%);color:hsl(0 0% 98%);padding:8px 12px;border-radius:6px;font-size:12px;font-weight:500;white-space:nowrap;z-index:9999;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .2s ease,transform .2s ease;box-shadow:0 4px 12px rgba(0,0,0,.25);border:1px solid hsl(0 0% 14.9%)}
-        .hover-card:hover .hover-card-content{opacity:1;visibility:visible}
-        .hover-card-content.top{bottom:100%;transform:translateX(-50%) translateY(-8px)}
-        .hover-card-content.bottom{top:100%;transform:translateX(-50%) translateY(8px)}
-        .hover-card-content::after{content:'';position:absolute;left:50%;transform:translateX(-50%);border:6px solid transparent;z-index:1000}
-        .hover-card-content.top::after{top:100%;border-top-color:hsl(0 0% 3.9%)}
-        .hover-card-content.bottom::after{bottom:100%;border-bottom-color:hsl(0 0% 3.9%)}
-        .hover-card-trigger:hover+.hover-card-content{opacity:1;visibility:visible}
-        [title]{position:relative}
-        [title]:hover::after{content:attr(title);position:absolute;bottom:100%;left:50%;transform:translateX(-50%) translateY(-4px);background:hsl(0 0% 3.9%);color:hsl(0 0% 98%);padding:8px 12px;border-radius:4px;font-size:11px;white-space:pre-line;max-width:500px;min-width:300px;word-wrap:break-word;z-index:1000;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-        [title]:hover::before{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:hsl(0 0% 3.9%);z-index:1000}
-    </style>
     <script>
-        tailwind.config={theme:{extend:{colors:{border:"hsl(0 0% 89%)",input:"hsl(0 0% 89%)",ring:"hsl(0 0% 3.9%)",background:"hsl(0 0% 100%)",foreground:"hsl(0 0% 3.9%)",primary:{DEFAULT:"hsl(0 0% 9%)",foreground:"hsl(0 0% 98%)"},secondary:{DEFAULT:"hsl(0 0% 96.1%)",foreground:"hsl(0 0% 9%)"},muted:{DEFAULT:"hsl(0 0% 96.1%)",foreground:"hsl(0 0% 45.1%)"},accent:{DEFAULT:"hsl(0 0% 96.1%)",foreground:"hsl(0 0% 9%)"},destructive:{DEFAULT:"hsl(0 84.2% 60.2%)",foreground:"hsl(0 0% 98%)"}}}}}
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        border: "hsl(var(--border))",
+                        input: "hsl(var(--input))",
+                        ring: "hsl(var(--ring))",
+                        background: "hsl(var(--background))",
+                        foreground: "hsl(var(--foreground))",
+                        primary: { DEFAULT: "hsl(var(--primary))", foreground: "hsl(var(--primary-foreground))" },
+                        secondary: { DEFAULT: "hsl(var(--secondary))", foreground: "hsl(var(--secondary-foreground))" },
+                        destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "hsl(var(--destructive-foreground))" },
+                        muted: { DEFAULT: "hsl(var(--muted))", foreground: "hsl(var(--muted-foreground))" },
+                        accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
+                        card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
+                    }
+                }
+            }
+        }
     </script>
+    <style>
+        :root {
+            --background: 0 0% 100%; --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%; --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%; --popover-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%; --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%; --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%; --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%; --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%; --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%; --input: 214.3 31.8% 91.4%; --ring: 222.2 84% 4.9%;
+            --radius: 0.5rem;
+        }
+        .dark {
+            --background: 222.2 84% 4.9%; --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%; --card-foreground: 210 40% 98%;
+            --popover: 222.2 84% 4.9%; --popover-foreground: 210 40% 98%;
+            --primary: 210 40% 98%; --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%; --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%; --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%; --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%; --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%; --input: 217.2 32.6% 17.5%; --ring: 212.7 26.8% 83.9%;
+        }
+        @keyframes slide-in-right { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .animate-slide-in { animation: slide-in-right 0.3s ease-out forwards; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+
+        .glass-panel { background: hsl(var(--card) / 0.8); backdrop-filter: blur(12px); }
+    </style>
 </head>
-<body class="h-full bg-background text-foreground antialiased">
-    <!-- Navigation Bar -->
-    <header class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div class="mx-auto flex h-14 max-w-7xl items-center px-6">
-            <div class="mr-4 flex items-baseline gap-3">
-                <span class="font-bold text-xl">Grok2API</span>
-                <span class="text-xs text-gray-400">by @Chenyme</span>
-            </div>
-            <div class="flex flex-1 items-center justify-end">
-                <div class="flex items-center gap-2">
-                    <div class="hover-card">
-                        <span id="storageMode" class="hover-card-trigger inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground border">
-                            <svg class="h-3 w-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <ellipse cx="12" cy="5" rx="9" ry="3"/>
-                                <path d="m21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-                                <path d="m3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-                            </svg>
-                            <span id="storageModeText">FILE</span>
-                        </span>
-                        <div id="storageModeTooltip" class="hover-card-content top">
-                            Loading...
-                        </div>
-                    </div>
-                    <nav class="flex items-center gap-1">
-                    <a
-                        href="https://github.com/chenyme/grok2api/issues"
-                        target="_blank"
-                        class="inline-flex items-center justify-center text-xs transition-colors hover:bg-accent hover:text-accent-foreground h-7 px-2.5 gap-1"
-                    >
-                        <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                        </svg>
-                        Feedback
-                    </a>
-                    <button
-                        onclick="logout()"
-                        class="inline-flex items-center justify-center text-xs transition-colors hover:bg-accent hover:text-accent-foreground h-7 px-2.5 gap-1"
-                    >
-                        <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                            <polyline points="16 17 21 12 16 7"/>
-                            <line x1="21" y1="12" x2="9" y2="12"/>
-                        </svg>
-                        Logout
-                    </button>
-                </nav>
-            </div>
-        </div>
-    </header>
+<body class="h-full bg-background text-foreground antialiased font-sans overflow-hidden flex">
 
-    <main class="mx-auto max-w-7xl px-6 py-6">
-        <!-- Tab Navigation -->
-        <div class="border-b border-border mb-6">
-            <nav class="flex space-x-8">
-                <button onclick="switchTab('tokens')" id="tabTokens" class="tab-btn border-b-2 border-primary text-sm font-medium py-3 px-1">Token Management</button>
-                <button onclick="switchTab('settings')" id="tabSettings" class="tab-btn border-b-2 border-transparent text-sm font-medium py-3 px-1">Settings</button>
-                <button onclick="switchTab('cloudinary')" id="tabCloudinary" class="tab-btn border-b-2 border-transparent text-sm font-medium py-3 px-1">Cloudinary</button>
-            </nav>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 -translate-x-full lg:translate-x-0 bg-card border-r border-border flex flex-col">
+        <!-- Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-border">
+            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+            <span class="font-bold text-xl">Grok2API</span>
         </div>
 
-        <!-- Token Management Panel -->
-        <div id="panelTokens">
-        <!-- Statistics Cards -->
-        <div class="grid gap-4 grid-cols-2 md:grid-cols-4 mb-6">
-            <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">Total Tokens</p>
-                <h3 class="text-xl font-bold" id="statTotal">-</h3>
-            </div>
+        <!-- Nav Links -->
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md group transition-colors bg-primary/10 text-primary">
+                <svg class="w-5 h-5 mr-3 opacity-70 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Dashboard
+            </button>
+            <button onclick="switchTab('tokens')" id="nav-tokens" class="nav-item w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md group transition-colors hover:bg-muted text-muted-foreground hover:text-foreground">
+                <svg class="w-5 h-5 mr-3 opacity-70 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11.542 12.93a2 2 0 00-.497 1.93l2.718 5.51a2 2 0 01-.438 2.195l-.813.813a1.998 1.998 0 01-2.828 0l-2.828-2.828a2 2 0 010-2.828l.813-.813a2 2 0 001.817-3.27l-5.51-2.718a2 2 0 00-1.93.498L6.838 9.83a2 2 0 002.266.66 2 2 0 00.756-.27 2.002 2.002 0 012.223-2.934l-.215-.215a6 6 0 01-5.37-5.37 6 6 0 0110.74 0z"></path></svg>
+                Token Management
+            </button>
+            <button onclick="switchTab('settings')" id="nav-settings" class="nav-item w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md group transition-colors hover:bg-muted text-muted-foreground hover:text-foreground">
+                <svg class="w-5 h-5 mr-3 opacity-70 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Global Settings
+            </button>
+            <button onclick="switchTab('cloudinary')" id="nav-cloudinary" class="nav-item w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md group transition-colors hover:bg-muted text-muted-foreground hover:text-foreground">
+                <svg class="w-5 h-5 mr-3 opacity-70 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                Cloudinary
+            </button>
+        </nav>
 
-            <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">Unused</p>
-                <h3 class="text-xl font-bold text-gray-500" id="statUnused">-</h3>
+        <!-- Footer Actions -->
+        <div class="p-4 border-t border-border space-y-2">
+            <div class="flex items-center justify-between px-2">
+                <span class="text-xs font-medium text-muted-foreground">Theme</span>
+                <button onclick="toggleTheme()" class="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Toggle Theme">
+                    <svg id="themeIconSun" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg id="themeIconMoon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
             </div>
-
-            <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">Rate-Limited</p>
-                <h3 class="text-xl font-bold text-orange-600" id="statLimited">-</h3>
-            </div>
-
-            <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">Expired</p>
-                <h3 class="text-xl font-bold text-destructive" id="statExpired">-</h3>
-            </div>
-
-            <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">Active</p>
-                <h3 class="text-xl font-bold text-green-600" id="statActive">-</h3>
-            </div>
-
-            <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">Total Remaining</p>
-                <h3 class="text-xl font-bold" id="statTotalRemaining">-</h3>
-            </div>
-
-            <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">Normal Remaining</p>
-                <h3 class="text-xl font-bold text-blue-600" id="statNormalRemaining">-</h3>
-            </div>
-
-            <div class="rounded-lg border border-border bg-background p-4">
-                <p class="text-sm font-medium text-muted-foreground mb-2">Heavy Remaining</p>
-                <h3 class="text-xl font-bold text-purple-600" id="statHeavyRemaining">-</h3>
-            </div>
+            <button onclick="logout()" class="w-full flex items-center px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-md transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Logout
+            </button>
         </div>
+    </aside>
 
-        <!-- Token List -->
-        <div class="rounded-lg border border-border bg-background">
-            <!-- Toolbar -->
-            <div class="flex items-center justify-between gap-4 p-4 border-b border-border">
-                <div class="flex items-center gap-3 flex-1">
+    <!-- Mobile Overlay -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 lg:ml-64 transition-all duration-300">
+        <!-- Mobile Header -->
+        <header class="lg:hidden h-16 flex items-center justify-between px-4 border-b border-border bg-background/80 backdrop-blur sticky top-0 z-30">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="p-2 -ml-2 rounded-md hover:bg-accent text-muted-foreground">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <span class="font-bold text-lg">Grok2API</span>
+            </div>
+        </header>
+
+        <main class="flex-1 p-4 lg:p-8 overflow-y-auto h-full">
+
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-bold tracking-tight">Dashboard</h1>
                     <div class="flex items-center gap-2">
-                        <select id="filterType" onchange="filterTokens()" class="h-8 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring">
-                            <option value="all">All Types</option>
-                            <option value="sso">SSO</option>
-                            <option value="ssoSuper">SuperSSO</option>
-                        </select>
-                        <select id="filterStatus" onchange="filterTokens()" class="h-8 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring">
-                            <option value="all">All Statuses</option>
-                            <option value="Unused">Unused</option>
-                            <option value="Rate-Limited">Rate-Limited</option>
-                            <option value="Expired">Expired</option>
-                            <option value="Active">Active</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <button 
-                        onclick="refreshTokens()"
-                        class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                        title="Refresh List"
-                    >
-                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="23 4 23 10 17 10"/>
-                            <polyline points="1 20 1 14 7 14"/>
-                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                        </svg>
-                    </button>
-                    <button
-                        onclick="refreshAllLimits()"
-                        class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-blue-100 hover:text-blue-800 h-8 w-8"
-                        title="Refresh All Rate Limits"
-                    >
-                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 2v6h6"/>
-                            <path d="M21 12A9 9 0 0 0 6 5.3L3 8"/>
-                            <path d="M21 22v-6h-6"/>
-                            <path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"/>
-                        </svg>
-                    </button>
-                    <span id="refresh-status" class="text-xs text-muted-foreground ml-2"></span>
-                    <div id="batchActions" class="hidden items-center gap-2">
-                        <button
-                            onclick="exportSelected()"
-                            class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                            title="Export Selected"
-                        >
-                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                            </svg>
-                        </button>
-                        <button
-                            onclick="batchDelete()"
-                            class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive h-8 w-8"
-                            title="Batch Delete"
-                        >
-                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"/>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                <line x1="10" y1="11" x2="10" y2="17"/>
-                                <line x1="14" y1="11" x2="14" y2="17"/>
-                            </svg>
+                        <div class="px-3 py-1 rounded-full bg-muted text-xs font-medium text-muted-foreground border border-border flex items-center gap-2">
+                            <span class="relative flex h-2 w-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            </span>
+                            <span id="storageModeText">FILE</span> Storage
+                        </div>
+                        <button onclick="refreshTokens()" class="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors" title="Refresh Data">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         </button>
                     </div>
-                    <button
-                        onclick="openAddModal()"
-                        class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3"
-                        title="Add Token"
-                    >
-                        <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"/>
-                            <line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-                        <span class="text-sm font-medium">Add</span>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <div class="flex items-center justify-between space-y-0 pb-2">
+                            <p class="text-sm font-medium text-muted-foreground">Total Tokens</p>
+                            <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11.542 12.93a2 2 0 00-.497 1.93l2.718 5.51a2 2 0 01-.438 2.195l-.813.813a1.998 1.998 0 01-2.828 0l-2.828-2.828a2 2 0 010-2.828l.813-.813a2 2 0 001.817-3.27l-5.51-2.718a2 2 0 00-1.93.498L6.838 9.83a2 2 0 002.266.66 2 2 0 00.756-.27 2.002 2.002 0 012.223-2.934l-.215-.215a6 6 0 01-5.37-5.37 6 6 0 0110.74 0z"></path></svg>
+                        </div>
+                        <div class="text-2xl font-bold" id="dashTotal">-</div>
+                        <div class="flex mt-3 h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                            <div id="barActive" class="bg-green-500 h-full transition-all duration-500" style="width: 0%"></div>
+                            <div id="barLimited" class="bg-orange-400 h-full transition-all duration-500" style="width: 0%"></div>
+                            <div id="barExpired" class="bg-destructive h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-muted-foreground mt-2">
+                            <span class="text-green-600 font-medium" id="dashActive">0</span> Active ·
+                            <span class="text-orange-500 font-medium" id="dashLimited">0</span> Limited ·
+                            <span class="text-destructive font-medium" id="dashExpired">0</span> Expired
+                        </p>
+                    </div>
+
+                    <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <div class="flex items-center justify-between space-y-0 pb-2">
+                            <p class="text-sm font-medium text-muted-foreground">Total Quota</p>
+                            <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <div class="text-2xl font-bold" id="dashTotalRemaining">-</div>
+                        <p class="text-xs text-muted-foreground mt-1">Combined remaining queries</p>
+                    </div>
+
+                    <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <div class="flex items-center justify-between space-y-0 pb-2">
+                            <p class="text-sm font-medium text-muted-foreground">Normal Quota</p>
+                            <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-blue-500 text-white shadow hover:bg-blue-500/80">Basic</span>
+                        </div>
+                        <div class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="dashNormalRemaining">-</div>
+                    </div>
+
+                    <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <div class="flex items-center justify-between space-y-0 pb-2">
+                            <p class="text-sm font-medium text-muted-foreground">Heavy Quota</p>
+                            <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-purple-500 text-white shadow hover:bg-purple-500/80">Super</span>
+                        </div>
+                        <div class="text-2xl font-bold text-purple-600 dark:text-purple-400" id="dashHeavyRemaining">-</div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h3 class="font-semibold mb-4">Quick Actions</h3>
+                        <div class="flex flex-wrap gap-3">
+                            <button onclick="switchTab('tokens'); openAddModal()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Add Tokens
+                            </button>
+                            <button onclick="refreshAllLimits()" class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                Refresh Limits
+                            </button>
+                            <button onclick="switchTab('settings')" class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                Config
+                            </button>
+                        </div>
+                    </div>
+                    <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h3 class="font-semibold mb-4">Cache Status</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-muted-foreground">Images</span>
+                                <span class="font-mono" id="dashImageCache">0 MB</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-muted-foreground">Videos</span>
+                                <span class="font-mono" id="dashVideoCache">0 MB</span>
+                            </div>
+                            <div class="pt-2 border-t border-border flex justify-between items-center">
+                                <span class="text-sm font-medium">Total</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono font-bold" id="dashTotalCache">0 MB</span>
+                                    <button onclick="clearCache()" class="text-xs bg-secondary hover:bg-secondary/80 px-2 py-1 rounded text-secondary-foreground transition-colors">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Token Management View -->
+            <div id="view-tokens" class="space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <h1 class="text-2xl font-bold tracking-tight">Token Management</h1>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:flex-initial">
+                            <svg class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input id="searchInput" onkeyup="filterTokens()" type="text" placeholder="Search tokens..." class="pl-9 h-9 w-full sm:w-64 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                        </div>
+                        <button onclick="openAddModal()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 shadow">
+                            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Add
+                        </button>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                    <!-- Toolbar -->
+                    <div class="flex flex-wrap items-center gap-4 p-4 border-b border-border bg-muted/30">
+                        <div class="flex items-center gap-2">
+                            <select id="filterType" onchange="filterTokens()" class="h-8 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring">
+                                <option value="all">All Types</option>
+                                <option value="sso">SSO</option>
+                                <option value="ssoSuper">SuperSSO</option>
+                            </select>
+                            <select id="filterStatus" onchange="filterTokens()" class="h-8 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring">
+                                <option value="all">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Rate-Limited">Rate-Limited</option>
+                                <option value="Expired">Expired</option>
+                                <option value="Unused">Unused</option>
+                            </select>
+                        </div>
+                        <div class="flex-1"></div>
+                        <div id="batchActions" class="hidden items-center gap-2 animate-slide-in">
+                            <span id="selectedCount" class="text-sm text-muted-foreground mr-2">0 selected</span>
+                            <button onclick="exportSelected()" class="h-8 px-3 text-xs font-medium rounded-md border border-input bg-background hover:bg-accent">Export</button>
+                            <button onclick="batchDelete()" class="h-8 px-3 text-xs font-medium rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20">Delete</button>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="relative w-full overflow-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-muted/50 text-muted-foreground font-medium">
+                                <tr>
+                                    <th class="h-10 px-4 align-middle w-10">
+                                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="h-4 w-4 rounded border-input text-primary focus:ring-ring">
+                                    </th>
+                                    <th class="h-10 px-4 align-middle">Token</th>
+                                    <th class="h-10 px-4 align-middle w-24">Type</th>
+                                    <th class="h-10 px-4 align-middle w-24">Status</th>
+                                    <th class="h-10 px-4 align-middle w-24">Normal</th>
+                                    <th class="h-10 px-4 align-middle w-24">Heavy</th>
+                                    <th class="h-10 px-4 align-middle w-40">Created</th>
+                                    <th class="h-10 px-4 align-middle w-16 text-right"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tokenTableBody" class="divide-y divide-border">
+                                <!-- Content injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="emptyState" class="hidden flex flex-col items-center justify-center py-12 text-center">
+                        <div class="rounded-full bg-muted p-3 mb-3">
+                            <svg class="h-6 w-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                        </div>
+                        <h3 class="text-lg font-semibold">No tokens found</h3>
+                        <p class="text-sm text-muted-foreground mt-1">Adjust filters or add new tokens to get started.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="view-settings" class="space-y-6 hidden">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-bold tracking-tight">Global Settings</h1>
+                    <div class="flex gap-2">
+                        <button onclick="saveGlobalSettings(); saveGrokSettings();" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 shadow">
+                            Save All Changes
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid gap-6 lg:grid-cols-2">
+                    <!-- System -->
+                    <div class="space-y-6">
+                        <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
+                            <h3 class="font-semibold mb-4 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                System
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium">Admin User</label>
+                                        <input id="cfgAdminUser" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="admin">
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium">Admin Password</label>
+                                        <input id="cfgAdminPass" type="password" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="Keep unchanged">
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium">Log Level</label>
+                                    <select id="cfgLogLevel" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                                        <option>DEBUG</option><option>INFO</option><option>WARNING</option><option>ERROR</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
+                            <h3 class="font-semibold mb-4 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                                Network & Proxy
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium">Service Proxy (API)</label>
+                                    <input id="cfgProxyUrl" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="socks5://user:pass@host:port">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium">Cache Proxy (Media)</label>
+                                    <input id="cfgCacheProxyUrl" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="Same as Service Proxy if empty">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium">CF Clearance</label>
+                                    <input id="cfgCfClearance" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="Cloudflare cookie value">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grok & Media -->
+                    <div class="space-y-6">
+                        <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
+                            <h3 class="font-semibold mb-4 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Grok Parameters
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium">API Key (Authentication)</label>
+                                    <input id="cfgApiKey" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="Optional security key">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium">X Statsig ID</label>
+                                    <input id="cfgStatsigId" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="Anti-bot ID">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium">Temporary Chat</label>
+                                        <select id="cfgTemporary" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                                            <option value="true">Enabled</option>
+                                            <option value="false">Disabled</option>
+                                        </select>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium">Filter Tags</label>
+                                        <input id="cfgFilteredTags" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="tag1,tag2">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
+                            <h3 class="font-semibold mb-4 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Media & Timeouts
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium">Image Mode</label>
+                                        <select id="cfgImageMode" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                                            <option value="url">URL</option>
+                                            <option value="base64">Base64</option>
+                                        </select>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium">Base URL</label>
+                                        <input id="cfgBaseUrl" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="https://your-domain.com">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="space-y-1">
+                                        <label class="text-xs font-medium">Chunk Timeout</label>
+                                        <input id="cfgStreamChunkTimeout" type="number" class="flex h-8 w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-xs font-medium">First Resp Timeout</label>
+                                        <input id="cfgStreamFirstResponseTimeout" type="number" class="flex h-8 w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-xs font-medium">Total Timeout</label>
+                                        <input id="cfgStreamTotalTimeout" type="number" class="flex h-8 w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 pt-2">
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium">Img Cache (MB)</label>
+                                        <input id="cfgImageCacheMaxSize" type="number" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium">Vid Cache (MB)</label>
+                                        <input id="cfgVideoCacheMaxSize" type="number" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cloudinary View -->
+            <div id="view-cloudinary" class="space-y-6 hidden">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-bold tracking-tight">Cloudinary</h1>
+                    <button onclick="openAddCloudinaryModal()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 shadow">
+                        Add Account
                     </button>
                 </div>
-            </div>
-            
-            <!-- Table -->
-            <div class="relative w-full overflow-auto">
-                <table class="w-full text-sm table-fixed">
-                    <thead>
-                        <tr class="border-b border-border">
-                            <th class="h-10 px-3 text-left align-middle font-medium w-12">
-                                <input
-                                    type="checkbox"
-                                    id="selectAll"
-                                    onchange="toggleSelectAll()"
-                                    class="h-3.5 w-3.5 rounded border border-input focus:ring-1 focus:ring-ring"
-                                >
-                            </th>
-                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-72">Token</th>
-                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-20">Type</th>
-                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-20">Status</th>
-                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-20">Normal Remaining</th>
-                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-20">Heavy Remaining</th>
-                            <th class="h-10 px-3 text-left align-middle text-sm font-medium text-muted-foreground w-40">Created Time</th>
-                            <th class="h-10 px-3 text-right align-middle text-sm font-medium text-muted-foreground w-20">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tokenTableBody" class="divide-y divide-border">
-                        <!-- Dynamic Content -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <div id="emptyState" class="hidden flex flex-col items-center justify-center py-12">
-                <svg class="h-10 w-10 text-muted-foreground/50 mb-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <path d="M9 9h6v6H9z"/>
-                </svg>
-                <p class="text-sm text-muted-foreground">No data</p>
-            </div>
-        </div>
-        </div>
 
-        <!-- Global Settings Panel -->
-        <div id="panelSettings" class="hidden">
-            <!-- Global Configuration Area -->
-            <div class="mb-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold">Global Settings</h2>
-                    <button onclick="saveGlobalSettings()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-black hover:text-white h-9 px-4 transition-colors">Save Settings</button>
-                </div>
-                <div class="grid gap-4 lg:grid-cols-3">
-                    <!-- System Settings -->
-                    <div class="rounded-lg border border-border bg-background p-6">
-                        <h3 class="text-sm font-semibold mb-4">System Settings</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Admin Username
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Username for admin console">?</span>
-                                </label>
-                                <input id="cfgAdminUser" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="admin">
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Admin Password
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Password for admin console. Leave blank to keep current password.">?</span>
-                                </label>
-                                <input id="cfgAdminPass" type="password" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Leave blank to keep current">
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Log Level
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Log verbosity. DEBUG: most detailed | INFO: general info | WARNING: warnings | ERROR: only errors">?</span>
-                                </label>
-                                <select id="cfgLogLevel" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option>DEBUG</option><option>INFO</option><option>WARNING</option><option>ERROR</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Media Settings -->
-                    <div class="rounded-lg border border-border bg-background p-6">
-                        <h3 class="text-sm font-semibold mb-4">Media Settings</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Image Mode
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="How images are returned. URL: image link, supports caching | Base64: base64 encoded, no caching">?</span>
-                                </label>
-                                <select id="cfgImageMode" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="url">URL (Image Link)</option>
-                                    <option value="base64">Base64 (base64 encoded)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Service URL
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Public URL of the server, used to build image URLs (only needed for URL image mode)">?</span>
-                                </label>
-                                <input id="cfgBaseUrl" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="http://localhost:8000">
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                        Image Cache (MB)
-                                        <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Max image cache size (MB). Old cache will be cleared when exceeded.">?</span>
-                                    </label>
-                                    <input id="cfgImageCacheMaxSize" type="number" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="500">
-                                </div>
-                                <div>
-                                    <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                        Video Cache (MB)
-                                        <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Max video cache size (MB). Old cache will be cleared when exceeded.">?</span>
-                                    </label>
-                                    <input id="cfgVideoCacheMaxSize" type="number" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="1000">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Cache Management -->
-                    <div class="rounded-lg border border-border bg-background p-6">
-                        <h3 class="text-sm font-semibold mb-4">Cache Management</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 block">Image Cache</label>
-                                <div class="flex gap-2">
-                                    <input id="imageCacheSize" readonly class="flex h-9 flex-1 rounded-md border border-input bg-muted px-3 py-2 text-sm" placeholder="0 MB">
-                                    <button onclick="clearImageCache()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-red-600 hover:text-white h-9 w-9 p-0 transition-colors">
-                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 block">Video Cache</label>
-                                <div class="flex gap-2">
-                                    <input id="videoCacheSize" readonly class="flex h-9 flex-1 rounded-md border border-input bg-muted px-3 py-2 text-sm" placeholder="0 MB">
-                                    <button onclick="clearVideoCache()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-red-600 hover:text-white h-9 w-9 p-0 transition-colors">
-                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 block">All Cache</label>
-                                <div class="flex gap-2">
-                                    <input id="totalCacheSize" readonly class="flex h-9 flex-1 rounded-md border border-input bg-muted px-3 py-2 text-sm font-medium" placeholder="0 MB">
-                                    <button onclick="clearCache()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-red-600 hover:text-white h-9 w-9 p-0 transition-colors">
-                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Grok Configuration Area -->
-            <div>
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold">Grok Settings</h2>
-                    <button onclick="saveGrokSettings()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-black hover:text-white h-9 px-4 transition-colors">Save Settings</button>
-                </div>
-                <div class="grid gap-4 lg:grid-cols-3">
-                    <!-- Basic Settings -->
-                    <div class="rounded-lg border border-border bg-background p-6">
-                        <h3 class="text-sm font-semibold mb-4">Basic Settings</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    API Key
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="API key for authentication, used to protect API access">?</span>
-                                </label>
-                                <input id="cfgApiKey" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="">
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    X Statsig ID
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Statsig ID for experiments and analytics">?</span>
-                                </label>
-                                <input id="cfgStatsigId" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="">
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Filter Tags
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Tags to filter from response, comma-separated. e.g.: xaiartifact,xai:tool_usage_card">?</span>
-                                </label>
-                                <input id="cfgFilteredTags" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="xaiartifact,xai:tool_usage_card">
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Temporary Session
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="If enabled, each conversation creates a new session without history. If disabled, conversations can be continued.">?</span>
-                                </label>
-                                <select id="cfgTemporary" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                    <option value="false">Off</option>
-                                    <option value="true">On</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Proxy Settings -->
-                    <div class="rounded-lg border border-border bg-background p-6">
-                        <h3 class="text-sm font-semibold mb-4">Proxy Settings</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    CF Clearance
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Cloudflare verification cookie, used to bypass Cloudflare's bot check.">?</span>
-                                </label>
-                                <input id="cfgCfClearance" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="">
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Proxy Url (Service Proxy)
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Proxy for API requests and uploads. Supports http, https, socks5. Format: socks5://user:pass@host:port">?</span>
-                                </label>
-                                <input id="cfgProxyUrl" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="socks5://username:password@127.0.0.1:7890">
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Cache Proxy Url (Cache Proxy)
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Dedicated proxy for image/video cache downloads. If not set, service proxy is used. Grok's media endpoints have low IP risk control, so cheaper high-bandwidth nodes can be used.">?</span>
-                                </label>
-                                <input id="cfgCacheProxyUrl" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="socks5://username:password@127.0.0.1:7890">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Timeout Settings -->
-                    <div class="rounded-lg border border-border bg-background p-6">
-                        <h3 class="text-sm font-semibold mb-4">Timeout Settings</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    First Response Timeout (s)
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Max time to wait for the first data chunk from the API (seconds). Will error on timeout. Recommended: 30-60s">?</span>
-                                </label>
-                                <input id="cfgStreamFirstResponseTimeout" type="number" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="30">
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Stream Interval Timeout (s)
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Max interval between data chunks (seconds). Connection will be closed if exceeded. Recommended: 60-180s">?</span>
-                                </label>
-                                <input id="cfgStreamChunkTimeout" type="number" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="120">
-                            </div>
-                            <div>
-                                <label class="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                                    Total Generation Timeout (s)
-                                    <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground text-muted-foreground cursor-help" style="font-size:10px;line-height:1" title="Max total time for the entire conversation generation (seconds). For very long conversations. Recommended: 300-900s">?</span>
-                                </label>
-                                <input id="cfgStreamTotalTimeout" type="number" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="600">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Configuration Notes -->
-            <div class="mt-8 rounded border border-blue-300 bg-blue-50 px-4 py-3">
-                <div class="text-xs text-gray-800 leading-relaxed">
-                    <div class="text-base font-medium text-gray-900 mb-2.5">Notes</div>
-                    <div class="space-y-1.5">
-                        <div><span class="font-medium">X Statsig ID:</span> Anti-bot verification parameter. Do not modify unless necessary.</div>
-                        <div><span class="font-medium">Service URL:</span> Your public service URL (e.g., https://yourdomain.com) is needed to construct image/video URLs. Can be left blank if you don't use video and use Base64 mode for images.</div>
-                        <div><span class="font-medium">Proxy Settings:</span> The service proxy is for Grok API access and image uploads. The cache proxy is specifically for downloading image/video cache. If only the service proxy is set, it will be used for caching too. If both are set, they are used separately.</div>
-                        <div><span class="font-medium">Request 403:</span> Usually blocked by Cloudflare. Solutions: 1. Change server IP | 2. Configure a proxy IP | 3. Visit grok.com on the server, pass the CF check, then get cf_clearance from F12 developer tools.</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Cloudinary Configuration Panel -->
-        <div id="panelCloudinary" class="hidden">
-            <div class="rounded-lg border border-border bg-background">
-                <div class="flex items-center justify-between gap-4 p-4 border-b border-border">
-                    <h2 class="text-xl font-bold">Cloudinary Account Management</h2>
-                    <button
-                        onclick="openAddCloudinaryModal()"
-                        class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3"
-                    >
-                        <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"/>
-                            <line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-                        <span class="text-sm font-medium">Add</span>
-                    </button>
-                </div>
-                <div class="relative w-full overflow-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b border-border">
-                                <th class="h-10 px-3 text-left align-middle font-medium text-muted-foreground">Cloud Name</th>
-                                <th class="h-10 px-3 text-left align-middle font-medium text-muted-foreground">API Key</th>
-                                <th class="h-10 px-3 text-right align-middle font-medium text-muted-foreground">Actions</th>
+                <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-muted/50 text-muted-foreground font-medium">
+                            <tr>
+                                <th class="h-10 px-4 align-middle">Cloud Name</th>
+                                <th class="h-10 px-4 align-middle">API Key</th>
+                                <th class="h-10 px-4 align-middle text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="cloudinaryTableBody" class="divide-y divide-border">
-                            <!-- Dynamic Content -->
+                            <!-- Content -->
                         </tbody>
                     </table>
-                </div>
-                <div id="cloudinaryEmptyState" class="hidden flex flex-col items-center justify-center py-12">
-                    <svg class="h-10 w-10 text-muted-foreground/50 mb-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2"/>
-                        <path d="M9 9h6v6H9z"/>
-                    </svg>
-                    <p class="text-sm text-muted-foreground">No data</p>
+                    <div id="cloudinaryEmptyState" class="hidden flex flex-col items-center justify-center py-12 text-center">
+                        <p class="text-sm text-muted-foreground">No Cloudinary accounts found.</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </main>
 
-    <!-- Add Cloudinary Account Modal -->
-    <div id="addCloudinaryModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-        <div class="bg-background rounded-lg border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
-            <div class="flex items-center justify-between p-5 border-b border-border">
-                <h3 class="text-lg font-semibold">Add Cloudinary Account</h3>
-                <button onclick="closeAddCloudinaryModal()" class="text-muted-foreground hover:text-foreground transition-colors">
-                    <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Modals -->
+    <!-- Add Token Modal -->
+    <div id="addModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4 transition-opacity opacity-0" onclick="if(event.target===this)closeAddModal()">
+        <div class="bg-card text-card-foreground rounded-lg border border-border shadow-lg w-full max-w-lg transform scale-95 transition-transform duration-200" id="addModalContent">
+            <div class="flex flex-col p-6 space-y-1">
+                <h3 class="font-semibold tracking-tight text-lg">Add Tokens</h3>
+                <p class="text-sm text-muted-foreground">Paste your Grok SSO tokens below.</p>
             </div>
-            <div class="p-5 space-y-4">
+            <div class="p-6 pt-0 space-y-4">
                 <div class="space-y-2">
-                    <label class="text-sm font-medium text-muted-foreground">Account List (URL format, one per line)</label>
-                    <textarea
-                        id="addCloudinaryAccountList"
-                        rows="12"
-                        placeholder="cloudinary://<api_key>:<api_secret>@<cloud_name>"
-                        class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono resize-none"
-                    ></textarea>
+                    <label class="text-sm font-medium leading-none">Type</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="cursor-pointer border border-input rounded-md p-2 flex items-center justify-center gap-2 hover:bg-accent has-[:checked]:bg-primary/10 has-[:checked]:border-primary has-[:checked]:text-primary transition-all">
+                            <input type="radio" name="tokenType" value="sso" class="sr-only" checked onchange="$('addTokenType').value='sso'">
+                            <span class="font-medium text-sm">Standard SSO</span>
+                        </label>
+                        <label class="cursor-pointer border border-input rounded-md p-2 flex items-center justify-center gap-2 hover:bg-accent has-[:checked]:bg-primary/10 has-[:checked]:border-primary has-[:checked]:text-primary transition-all">
+                            <input type="radio" name="tokenType" value="ssoSuper" class="sr-only" onchange="$('addTokenType').value='ssoSuper'">
+                            <span class="font-medium text-sm">Super SSO</span>
+                        </label>
+                        <input type="hidden" id="addTokenType" value="sso">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium leading-none">Tokens</label>
+                    <textarea id="addTokenList" class="flex min-h-[150px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 font-mono" placeholder="sso-..., one per line"></textarea>
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-3 p-5 border-t border-border bg-muted/30">
-                <button
-                    onclick="closeAddCloudinaryModal()"
-                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent h-9 px-5"
-                >
-                    Cancel
-                </button>
-                <button
-                    onclick="submitAddCloudinaryAccount()"
-                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-5"
-                >
-                    Add
-                </button>
+            <div class="flex items-center p-6 pt-0 justify-end gap-2">
+                <button onclick="closeAddModal()" class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">Cancel</button>
+                <button onclick="submitAddTokens()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">Add Tokens</button>
             </div>
         </div>
     </div>
 
-    <!-- Add Token Modal -->
-    <div id="addModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-        <div class="bg-background rounded-lg border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl">
-            <div class="flex items-center justify-between p-5 border-b border-border">
-                <h3 class="text-lg font-semibold">Add Token</h3>
-                <button onclick="closeAddModal()" class="text-muted-foreground hover:text-foreground transition-colors">
-                    <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
+    <!-- Add Cloudinary Modal -->
+    <div id="addCloudinaryModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4 transition-opacity opacity-0" onclick="if(event.target===this)closeAddCloudinaryModal()">
+        <div class="bg-card text-card-foreground rounded-lg border border-border shadow-lg w-full max-w-lg transform scale-95 transition-transform duration-200">
+            <div class="flex flex-col p-6 space-y-1">
+                <h3 class="font-semibold tracking-tight text-lg">Add Cloudinary</h3>
             </div>
-            <div class="p-5 space-y-4">
+            <div class="p-6 pt-0 space-y-4">
                 <div class="space-y-2">
-                    <label class="text-sm font-medium text-muted-foreground">Token Type</label>
-                    <select id="addTokenType" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
-                        <option value="sso">SSO</option>
-                        <option value="ssoSuper">SuperSSO</option>
-                    </select>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-muted-foreground">Token List <span class="text-muted-foreground">(one per line)</span></label>
-                    <textarea
-                        id="addTokenList"
-                        rows="12"
-                        placeholder="Enter tokens, one per line"
-                        class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono resize-none"
-                    ></textarea>
+                    <label class="text-sm font-medium leading-none">Account URL</label>
+                    <textarea id="addCloudinaryAccountList" class="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-mono" placeholder="cloudinary://key:secret@name"></textarea>
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-3 p-5 border-t border-border bg-muted/30">
-                <button
-                    onclick="closeAddModal()"
-                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent h-9 px-5"
-                >
-                    Cancel
-                </button>
-                <button
-                    onclick="submitAddTokens()"
-                    class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-5"
-                >
-                    Add
-                </button>
+            <div class="flex items-center p-6 pt-0 justify-end gap-2">
+                <button onclick="closeAddCloudinaryModal()" class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">Cancel</button>
+                <button onclick="submitAddCloudinaryAccount()" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">Add</button>
             </div>
         </div>
     </div>
 
     <script>
-        let allTokens=[],filteredTokens=[],selectedTokens=new Set();
-        const $=(id)=>document.getElementById(id),
-        checkAuth=()=>{const t=localStorage.getItem('adminToken');return t||(location.href='/login',null),t},
-        apiRequest=async(url,opts={})=>{const t=checkAuth();if(!t)return null;const r=await fetch(url,{...opts,headers:{...opts.headers,Authorization:`Bearer ${t}`,'Content-Type':'application/json'}});return r.status===401?(localStorage.removeItem('adminToken'),location.href='/login',null):r},
-        loadStats=async()=>{try{const r=await apiRequest('/api/stats');if(!r)return;const d=await r.json();if(d.success){const s=d.data;$('statTotal').textContent=s.total||0;['Unused','Limited','Expired','Active'].forEach((k,i)=>$(`stat${k}`).textContent=(s.normal?.[k.toLowerCase()]||0)+(s.super?.[k.toLowerCase()]||0))}}catch(e){console.error('Failed to load stats:',e)}},
-        calcRemaining=()=>{let n=0,h=0;allTokens.forEach(t=>{if(t.remaining_queries>0)n+=t.remaining_queries;if(t.heavy_remaining_queries>0)h+=t.heavy_remaining_queries});return{normal:n,heavy:h,total:n+h}},
-        loadTokens=async()=>{try{const r=await apiRequest('/api/tokens');if(!r)return;const d=await r.json();d.success&&(allTokens=d.data,filteredTokens=allTokens,selectedTokens.clear(),renderTokens(),updateRemaining())}catch(e){console.error('Failed to load list:',e)}},
-        updateRemaining=()=>{const r=calcRemaining();['Total','Normal','Heavy'].forEach(k=>$(`stat${k}Remaining`).textContent=r[k.toLowerCase()]===0?'-':r[k.toLowerCase()].toLocaleString())}
+        // Core Logic
+        const $ = id => document.getElementById(id);
+        let allTokens = [], filteredTokens = [], selectedTokens = new Set();
+        let currentView = 'dashboard';
 
-        const renderTokens=()=>{const tb=$('tokenTableBody'),es=$('emptyState'),ss={'Unused':'bg-muted text-muted-foreground','Rate-Limited':'bg-orange-50 text-orange-700 border-orange-200','Expired':'bg-destructive/10 text-destructive border-destructive/20','Active':'bg-green-50 text-green-700 border-green-200'},ts={sso:'bg-blue-50 text-blue-700 border-blue-200',ssoSuper:'bg-purple-50 text-purple-700 border-purple-200'},tl={sso:'SSO',ssoSuper:'SuperSSO'};if(!filteredTokens.length){tb.innerHTML='';es.classList.remove('hidden');$('selectAll').checked=false;return updateBatchActions()}es.classList.add('hidden');tb.innerHTML=filteredTokens.map(t=>`<tr class="transition-colors"><td class="py-2.5 px-3 align-middle w-12"><input type="checkbox" class="token-checkbox h-3.5 w-3.5 rounded border border-input focus:ring-1 focus:ring-ring" data-token="${t.token}" data-type="${t.token_type}" ${selectedTokens.has(t.token)?'checked':''} onchange="toggleToken('${t.token}')"></td><td class="py-2.5 px-3 align-middle w-80"><div class="flex items-center gap-2"><span class="font-mono text-xs">${t.token.substring(0,30)}...</span><button onclick="copyToken('${t.token.replace(/'/g,"\\'")}',event)" class="inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent h-6 w-6" title="Copy Full Token"><svg class="h-3 w-3 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div></td><td class="py-2.5 px-3 align-middle w-20"><span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border ${ts[t.token_type]}">${tl[t.token_type]}</span></td><td class="py-2.5 px-3 align-middle w-20"><span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border ${ss[t.status]}">${t.status}</span></td><td class="py-2.5 px-3 align-middle w-20 text-xs tabular-nums">${t.remaining_queries===-1?'-':t.remaining_queries}</td><td class="py-2.5 px-3 align-middle w-20 text-xs tabular-nums">${t.heavy_remaining_queries===-1?'-':t.heavy_remaining_queries}</td><td class="py-2.5 px-3 align-middle w-32 text-xs text-muted-foreground">${t.created_time?new Date(t.created_time).toLocaleString('en-US',{dateStyle:'short',timeStyle:'short'}):'-'}</td><td class="py-2.5 px-3 align-middle text-right w-16"><button onclick="deleteToken('${t.token}','${t.token_type}')" class="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive h-7 w-7"><svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td></tr>`).join('');updateBatchActions()},
-        toggleToken=t=>selectedTokens[selectedTokens.has(t)?'delete':'add'](t)||updateBatchActions(),
-        toggleSelectAll=()=>{const sa=$('selectAll');sa.checked?filteredTokens.forEach(t=>selectedTokens.add(t.token)):selectedTokens.clear();renderTokens()},
-        updateBatchActions=()=>{const ba=$('batchActions'),sc=$('selectedCount'),c=selectedTokens.size;ba.classList[c>0?'add':'remove']('flex');ba.classList[c>0?'remove':'add']('hidden');c>0&&(sc.textContent=`${c} selected`);$('selectAll').checked=filteredTokens.length>0&&c===filteredTokens.length},
-        filterTokens=()=>{const tf=$('filterType').value,sf=$('filterStatus').value;filteredTokens=allTokens.filter(t=>(tf==='all'||t.token_type===tf)&&(sf==='all'||t.status===sf.replace('-','')));selectedTokens.clear();renderTokens()},
-        refreshTokens=async()=>{await loadTokens();await loadStats()},
-        openAddModal=()=>$('addModal').classList.remove('hidden'),
-        closeAddModal=()=>{$('addModal').classList.add('hidden');$('addTokenList').value=''},
-        deleteToken=async(t,tt)=>{if(!confirm('Are you sure you want to delete this token?'))return;try{const r=await apiRequest('/api/tokens/delete',{method:'POST',body:JSON.stringify({tokens:[t],token_type:tt})});if(!r)return;const d=await r.json();d.success?await refreshTokens():alert('Delete failed: '+(d.error||'Unknown error'))}catch(e){alert('Delete failed: '+e.message)}},
-        batchDelete=async()=>{if(!selectedTokens.size||!confirm(`Are you sure you want to delete the selected ${selectedTokens.size} tokens? This action cannot be undone!`))return;const tbt={sso:[],ssoSuper:[]};document.querySelectorAll('.token-checkbox:checked').forEach(cb=>tbt[cb.dataset.type].push(cb.dataset.token));try{const ps=[];['sso','ssoSuper'].forEach(k=>tbt[k].length&&ps.push(apiRequest('/api/tokens/delete',{method:'POST',body:JSON.stringify({tokens:tbt[k],token_type:k})})));await Promise.all(ps);await refreshTokens()}catch(e){alert('Batch delete failed: '+e.message)}},
-        submitAddTokens=async()=>{const tt=$('addTokenType').value,tks=$('addTokenList').value.split('\n').map(t=>t.trim()).filter(t=>t);if(!tks.length)return alert('Please enter at least one token');try{const r=await apiRequest('/api/tokens/add',{method:'POST',body:JSON.stringify({tokens:tks,token_type:tt})});if(!r)return;const d=await r.json();d.success?(closeAddModal(),await refreshTokens()):alert('Add failed: '+(d.error||'Unknown error'))}catch(e){alert('Add failed: '+e.message)}},
-        copyToken=async(t,e)=>{e.stopPropagation();try{await navigator.clipboard.writeText(t);showToast('Token copied to clipboard','success')}catch(err){console.error('Copy failed:',err);showToast('Copy failed, please copy manually','error')}},
-        refreshAllLimits=async()=>{const t=$("refresh-status");t.textContent="Refreshing...";try{const e=await apiRequest("/api/refresh-limits",{method:"POST"});if(!e)return;const s=await e.json();s.success?(showToast(s.message||"Rate limits refresh started.","success"),setTimeout(()=>{refreshTokens(),t.textContent=""},2e3)):(showToast(s.message||"Failed to start refresh.","error"),t.textContent="Error!")}catch(e){showToast("An error occurred while refreshing limits.","error"),t.textContent="Error!"}};
- 
-         const exportSelected=()=>{if(!selectedTokens.size)return showToast('Please select tokens to export first','error');const sd=allTokens.filter(t=>selectedTokens.has(t.token)),csv=[['Token','Type','Status','Normal Remaining','Heavy Remaining','Created Time'].join(','),...sd.map(t=>[`"${t.token}"`,t.token_type==='sso'?'SSO':'SuperSSO',t.status,t.remaining_queries===-1?'Unused':t.remaining_queries,t.heavy_remaining_queries===-1?'Unused':t.heavy_remaining_queries,`"${t.created_time?new Date(t.created_time).toLocaleString('en-US'):'-'}"`].join(','))].join('\n'),l=document.createElement('a');l.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));l.download=`grok_tokens_${new Date().toISOString().slice(0,10)}.csv`;l.style.display='none';document.body.appendChild(l);l.click();document.body.removeChild(l);URL.revokeObjectURL(l.href);showToast(`Exported ${selectedTokens.size} tokens`,'success')}
-        showToast=(m,t='info')=>{const d=document.createElement('div'),bc={success:'bg-green-600',error:'bg-destructive',info:'bg-primary'};d.className=`fixed bottom-4 right-4 ${bc[t]||bc.info} text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium z-50 animate-slide-up`;d.textContent=m;document.body.appendChild(d);setTimeout(()=>{d.style.opacity='0';d.style.transition='opacity .3s';setTimeout(()=>d.parentNode&&document.body.removeChild(d),300)},2000)}
-        logout=async()=>{if(!confirm('Are you sure you want to log out?'))return;try{await apiRequest('/api/logout',{method:'POST'})}catch(e){console.error('Logout failed:',e)}finally{localStorage.removeItem('adminToken');location.href='/login'}},
-        switchTab=t=>{['tokens','settings','cloudinary'].forEach(n=>{$(`panel${n.charAt(0).toUpperCase()+n.slice(1)}`).classList[n===t?'remove':'add']('hidden');$(`tab${n.charAt(0).toUpperCase()+n.slice(1)}`).classList[n===t?'add':'remove']('border-primary','text-primary');$(`tab${n.charAt(0).toUpperCase()+n.slice(1)}`).classList[n===t?'remove':'add']('border-transparent','text-muted-foreground')});if(t==='settings'){loadSettings()}else if(t==='cloudinary'){loadCloudinaryAccounts()}},
-        updateCacheProxyReadonly=()=>{const proxyUrl=$('cfgProxyUrl').value.trim(),cacheProxyInput=$('cfgCacheProxyUrl');if(proxyUrl){cacheProxyInput.readOnly=false;cacheProxyInput.classList.remove('bg-muted');cacheProxyInput.placeholder='socks5://username:password@127.0.0.1:7890'}else{cacheProxyInput.readOnly=true;cacheProxyInput.classList.add('bg-muted');cacheProxyInput.value='';cacheProxyInput.placeholder='Set service proxy to enable'}};
-        loadSettings=async()=>{try{const r=await apiRequest('/api/settings');if(!r)return;const d=await r.json();if(d.success){const g=d.data.global,k=d.data.grok;$('cfgAdminUser').value=g.admin_username||'';$('cfgAdminPass').value='';$('cfgLogLevel').value=g.log_level||'DEBUG';$('cfgImageCacheMaxSize').value=g.image_cache_max_size_mb||500;$('cfgVideoCacheMaxSize').value=g.video_cache_max_size_mb||1000;$('cfgImageMode').value=g.image_mode||'url';$('cfgBaseUrl').value=g.base_url||'';$('cfgApiKey').value=k.api_key||'';$('cfgProxyUrl').value=k.proxy_url||'';$('cfgCacheProxyUrl').value=k.cache_proxy_url||'';$('cfgCfClearance').value=k.cf_clearance||'';$('cfgStatsigId').value=k.x_statsig_id||'';$('cfgFilteredTags').value=k.filtered_tags||'';$('cfgTemporary').value=k.temporary!==false?'true':'false';$('cfgStreamChunkTimeout').value=k.stream_chunk_timeout||120;$('cfgStreamFirstResponseTimeout').value=k.stream_first_response_timeout||30;$('cfgStreamTotalTimeout').value=k.stream_total_timeout||600;updateCacheProxyReadonly();await loadCacheSize()}}catch(e){console.error('Failed to load settings:',e);showToast('Failed to load settings','error')}},
-        loadCloudinaryAccounts=async()=>{try{const r=await apiRequest('/api/cloudinary/accounts');if(!r)return;const d=await r.json();if(d.success){renderCloudinaryAccounts(d.data)}}catch(e){console.error('Failed to load Cloudinary accounts:',e)}},
-        renderCloudinaryAccounts=(accounts)=>{const tb=$('cloudinaryTableBody'),es=$('cloudinaryEmptyState');if(!accounts.length){tb.innerHTML='';es.classList.remove('hidden');return}es.classList.add('hidden');tb.innerHTML=accounts.map(acc=>`<tr><td class="p-3">${acc.cloud_name}</td><td class="p-3">${acc.api_key}</td><td class="p-3 text-right"><button onclick="deleteCloudinaryAccount('${acc.api_key}')" class="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive h-7 w-7"><svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td></tr>`).join('')},
-        openAddCloudinaryModal=()=>$('addCloudinaryModal').classList.remove('hidden'),
-        closeAddCloudinaryModal=()=>{$('addCloudinaryAccountList').value='';$('addCloudinaryModal').classList.add('hidden')},
-        submitAddCloudinaryAccount=async()=>{const urls=$('addCloudinaryAccountList').value.split('\n').map(u=>u.trim()).filter(u=>u);if(!urls.length)return alert('Please enter at least one Cloudinary URL');try{const r=await apiRequest('/api/cloudinary/accounts/add',{method:'POST',body:JSON.stringify({urls:urls})});if(!r)return;const d=await r.json();d.success?(closeAddCloudinaryModal(),loadCloudinaryAccounts()):alert('Add failed: '+(d.error||'Unknown error'))}catch(e){alert('Add failed: '+e.message)}},
-        deleteCloudinaryAccount=async(apiKey)=>{if(!confirm('Are you sure you want to delete this Cloudinary account?'))return;try{const r=await apiRequest('/api/cloudinary/accounts/delete',{method:'POST',body:JSON.stringify({api_keys:[apiKey]})});if(!r)return;const d=await r.json();d.success?loadCloudinaryAccounts():alert('Delete failed: '+(d.error||'Unknown error'))}catch(e){alert('Delete failed: '+e.message)}},
-        loadCacheSize=async()=>{try{const r=await apiRequest('/api/cache/size');if(!r)return;const d=await r.json();if(d.success){$('imageCacheSize').value=d.data.image_size||'0 MB';$('videoCacheSize').value=d.data.video_size||'0 MB';$('totalCacheSize').value=d.data.total_size||'0 MB'}}catch(e){console.error('Failed to load cache size:',e);$('imageCacheSize').value='0 MB';$('videoCacheSize').value='0 MB';$('totalCacheSize').value='0 MB'}},
-        clearImageCache=async()=>{if(!confirm('Are you sure you want to clear the image cache? This will delete all cached image files!'))return;try{const r=await apiRequest('/api/cache/clear/images',{method:'POST'});if(!r)return;const d=await r.json();d.success?(showToast(`Image cache cleared, ${d.data.deleted_count||0} files deleted`,'success'),await loadCacheSize()):showToast('Clear failed: '+(d.error||'Unknown error'),'error')}catch(e){showToast('Clear failed: '+e.message,'error')}},
-        clearVideoCache=async()=>{if(!confirm('Are you sure you want to clear the video cache? This will delete all cached video files!'))return;try{const r=await apiRequest('/api/cache/clear/videos',{method:'POST'});if(!r)return;const d=await r.json();d.success?(showToast(`Video cache cleared, ${d.data.deleted_count||0} files deleted`,'success'),await loadCacheSize()):showToast('Clear failed: '+(d.error||'Unknown error'),'error')}catch(e){showToast('Clear failed: '+e.message,'error')}},
-        clearCache=async()=>{if(!confirm('Are you sure you want to clear the cache? This will delete all files in the /data/temp directory!'))return;try{const r=await apiRequest('/api/cache/clear',{method:'POST'});if(!r)return;const d=await r.json();d.success?(showToast(`Cache cleared, ${d.data.deleted_count||0} files deleted`,'success'),await loadCacheSize()):showToast('Clear failed: '+(d.error||'Unknown error'),'error')}catch(e){showToast('Clear failed: '+e.message,'error')}},
-        saveGlobalSettings=async()=>{const gc={admin_username:$('cfgAdminUser').value,log_level:$('cfgLogLevel').value,image_cache_max_size_mb:parseInt($('cfgImageCacheMaxSize').value)||500,video_cache_max_size_mb:parseInt($('cfgVideoCacheMaxSize').value)||1000,image_mode:$('cfgImageMode').value,base_url:$('cfgBaseUrl').value};if($('cfgAdminPass').value)gc.admin_password=$('cfgAdminPass').value;try{const r=await apiRequest('/api/settings');if(!r)return;const d=await r.json();if(!d.success)return showToast('Failed to load settings','error');const s=await apiRequest('/api/settings',{method:'POST',body:JSON.stringify({global_config:gc,grok_config:d.data.grok})});if(!s)return;const sd=await s.json();sd.success?(showToast('Global settings saved successfully','success'),$('cfgAdminPass').value=''):showToast('Save failed: '+(sd.error||'Unknown error'),'error')}catch(e){showToast('Save failed: '+e.message,'error')}},
-        saveGrokSettings=async()=>{const pu=$('cfgProxyUrl').value.trim(),kc={api_key:$('cfgApiKey').value,proxy_url:pu,cache_proxy_url:pu?$('cfgCacheProxyUrl').value:'',cf_clearance:$('cfgCfClearance').value,x_statsig_id:$('cfgStatsigId').value,filtered_tags:$('cfgFilteredTags').value,temporary:$('cfgTemporary').value==='true',stream_chunk_timeout:parseInt($('cfgStreamChunkTimeout').value)||120,stream_first_response_timeout:parseInt($('cfgStreamFirstResponseTimeout').value)||30,stream_total_timeout:parseInt($('cfgStreamTotalTimeout').value)||600};try{const r=await apiRequest('/api/settings');if(!r)return;const d=await r.json();if(!d.success)return showToast('Failed to load settings','error');const s=await apiRequest('/api/settings',{method:'POST',body:JSON.stringify({global_config:d.data.global,grok_config:kc})});if(!s)return;const sd=await s.json();sd.success?showToast('Grok settings saved successfully','success'):showToast('Save failed: '+(sd.error||'Unknown error'),'error')}catch(e){showToast('Save failed: '+e.message,'error')}};
-        const updateHoverCardPosition=(cardElement)=>{const trigger=cardElement.querySelector('.hover-card-trigger'),content=cardElement.querySelector('.hover-card-content');if(!trigger||!content)return;console.log('Updating hover card position',cardElement,trigger,content);const rect=trigger.getBoundingClientRect(),windowHeight=window.innerHeight,spaceAbove=rect.top,spaceBelow=windowHeight-rect.bottom;content.classList.remove('top','bottom');const originalVisibility=getComputedStyle(content).visibility,originalOpacity=getComputedStyle(content).opacity;content.style.visibility='hidden';content.style.opacity='1';const contentHeight=content.offsetHeight;content.style.visibility=originalVisibility;content.style.opacity=originalOpacity;const position=spaceAbove>contentHeight+10?'top':spaceBelow>contentHeight+10?'bottom':'top';content.classList.add(position);console.log('Hover card position:',position,'Height:',contentHeight,'Space above:',spaceAbove,'Space below:',spaceBelow)},
-        loadStorageMode=async()=>{try{const r=await apiRequest('/api/storage/mode');if(!r)return;const d=await r.json();if(d.success){const mode=d.data.mode;console.log('Storage mode:',mode);$('storageModeText').textContent=mode;if(mode==='MYSQL'){$('storageMode').classList.add('bg-blue-50','text-blue-700','border-blue-200');$('storageModeTooltip').textContent='Database Connection Mode - Data is persisted, slower to modify but safer'}else if(mode==='REDIS'){$('storageMode').classList.add('bg-purple-50','text-purple-700','border-purple-200');$('storageModeTooltip').textContent='Redis Cache Mode - High-speed in-memory storage, data is persisted with excellent read/write performance'}else{$('storageMode').classList.add('bg-green-50','text-green-700','border-green-200');$('storageModeTooltip').textContent='File Storage Mode - Local file storage, fast read/write speed'};updateHoverCardPosition($('storageMode').closest('.hover-card'))}}catch(e){console.error('Failed to load storage mode:',e);$('storageModeText').textContent='FILE';$('storageMode').classList.add('bg-green-50','text-green-700','border-green-200');$('storageModeTooltip').textContent='File Storage Mode - Local file storage, fast read/write speed';updateHoverCardPosition($('storageMode').closest('.hover-card'))}};
-        window.addEventListener('DOMContentLoaded',()=>{checkAuth();loadStorageMode();refreshTokens();setInterval(()=>{loadStats();updateRemaining()},30000);window.addEventListener('resize',()=>{const hoverCard=$('storageMode').closest('.hover-card');hoverCard&&updateHoverCardPosition(hoverCard)});const hoverCard=$('storageMode').closest('.hover-card'),trigger=hoverCard?.querySelector('.hover-card-trigger'),content=hoverCard?.querySelector('.hover-card-content');if(trigger&&content){trigger.addEventListener('mouseenter',()=>{content.style.opacity='1';content.style.visibility='visible'});trigger.addEventListener('mouseleave',()=>{content.style.opacity='0';content.style.visibility='hidden'})};$('cfgProxyUrl').addEventListener('input',updateCacheProxyReadonly)});
+        // Auth & Initialization
+        const checkAuth = () => { if (!localStorage.getItem('adminToken')) location.href = '/login'; };
+        const apiRequest = async (url, opts = {}) => {
+            const t = localStorage.getItem('adminToken');
+            if (!t) return null;
+            try {
+                const r = await fetch(url, { ...opts, headers: { ...opts.headers, Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } });
+                if (r.status === 401) { localStorage.removeItem('adminToken'); location.href = '/login'; return null; }
+                return r;
+            } catch (e) { showToast('Network error', 'error'); throw e; }
+        };
+
+        // Theme Logic
+        const initTheme = () => {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        };
+        const toggleTheme = () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+        };
+
+        // Navigation
+        const switchTab = (view) => {
+            currentView = view;
+            // Update Sidebar State
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-primary/10', 'text-primary');
+                el.classList.add('text-muted-foreground', 'hover:bg-muted');
+            });
+            const activeNav = $(`nav-${view}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-muted-foreground', 'hover:bg-muted');
+                activeNav.classList.add('bg-primary/10', 'text-primary');
+            }
+
+            // Update Content
+            ['dashboard', 'tokens', 'settings', 'cloudinary'].forEach(v => {
+                $(`view-${v}`).classList.toggle('hidden', v !== view);
+            });
+
+            // Refresh data based on view
+            if (view === 'dashboard') loadStats();
+            if (view === 'tokens') loadTokens();
+            if (view === 'settings') loadSettings();
+            if (view === 'cloudinary') loadCloudinaryAccounts();
+
+            // Close sidebar on mobile
+            if (window.innerWidth < 1024) {
+                $('sidebar').classList.add('-translate-x-full');
+                $('sidebarOverlay').classList.add('hidden');
+            }
+        };
+
+        const toggleSidebar = () => {
+            const sb = $('sidebar');
+            const ov = $('sidebarOverlay');
+            const isClosed = sb.classList.contains('-translate-x-full');
+            sb.classList.toggle('-translate-x-full', !isClosed);
+            ov.classList.toggle('hidden', !isClosed);
+        };
+
+        // Toast System
+        const showToast = (msg, type = 'success') => {
+            const c = $('toast-container');
+            const id = Date.now();
+            const colorClass = type === 'error' ? 'bg-destructive text-destructive-foreground' : 'bg-primary text-primary-foreground';
+            const el = document.createElement('div');
+            el.className = `pointer-events-auto flex items-center justify-between gap-4 rounded-md shadow-lg p-4 text-sm font-medium transition-all duration-300 transform translate-y-10 opacity-0 ${colorClass}`;
+            el.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.remove()" class="opacity-70 hover:opacity-100">✕</button>`;
+            c.appendChild(el);
+
+            requestAnimationFrame(() => { el.classList.remove('translate-y-10', 'opacity-0'); });
+            setTimeout(() => {
+                el.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        };
+
+        // Dashboard Logic
+        const loadStats = async () => {
+            try {
+                const r = await apiRequest('/api/stats');
+                if (!r) return;
+                const d = await r.json();
+                if (d.success) {
+                    const s = d.data;
+                    const normal = s.normal || {};
+                    const superT = s.super || {};
+
+                    const total = s.total || 0;
+                    const active = (normal.active || 0) + (superT.active || 0);
+                    const limited = (normal.limited || 0) + (superT.limited || 0);
+                    const expired = (normal.expired || 0) + (superT.expired || 0);
+
+                    $('dashTotal').textContent = total;
+                    $('dashActive').textContent = active;
+                    $('dashLimited').textContent = limited;
+                    $('dashExpired').textContent = expired;
+
+                    // Update progress bars
+                    if (total > 0) {
+                        $('barActive').style.width = `${(active/total)*100}%`;
+                        $('barLimited').style.width = `${(limited/total)*100}%`;
+                        $('barExpired').style.width = `${(expired/total)*100}%`;
+                    } else {
+                        $('barActive').style.width = '0%';
+                        $('barLimited').style.width = '0%';
+                        $('barExpired').style.width = '0%';
+                    }
+
+                    // Load remaining quotas (need token list for this or separate API)
+                    // Re-using calculation from tokens logic if available, else rely on what we have
+                    if (allTokens.length === 0) await loadTokens(false); // Silent load
+                    updateRemainingWidgets();
+                }
+                await loadCacheSize();
+            } catch (e) { console.error(e); }
+        };
+
+        const updateRemainingWidgets = () => {
+            let n = 0, h = 0;
+            allTokens.forEach(t => {
+                if (t.remaining_queries > 0) n += t.remaining_queries;
+                if (t.heavy_remaining_queries > 0) h += t.heavy_remaining_queries;
+            });
+            $('dashTotalRemaining').textContent = (n + h).toLocaleString();
+            $('dashNormalRemaining').textContent = n.toLocaleString();
+            $('dashHeavyRemaining').textContent = h.toLocaleString();
+        };
+
+        // Token Management Logic
+        const loadTokens = async (render = true) => {
+            try {
+                const r = await apiRequest('/api/tokens');
+                if (!r) return;
+                const d = await r.json();
+                if (d.success) {
+                    allTokens = d.data;
+                    filteredTokens = allTokens; // Reset filter on reload? Or keep? keeping simple for now
+                    if (render) {
+                        filterTokens(); // Re-apply filters
+                    }
+                }
+            } catch (e) { showToast('Failed to load tokens', 'error'); }
+        };
+
+        const renderTokens = () => {
+            const tb = $('tokenTableBody');
+            const es = $('emptyState');
+
+            if (filteredTokens.length === 0) {
+                tb.innerHTML = '';
+                es.classList.remove('hidden');
+                return;
+            }
+            es.classList.add('hidden');
+
+            const statusColors = {
+                'Unused': 'bg-muted text-muted-foreground',
+                'Rate-Limited': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+                'Expired': 'bg-destructive/10 text-destructive',
+                'Active': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+            };
+
+            tb.innerHTML = filteredTokens.map(t => `
+                <tr class="border-b border-border hover:bg-muted/50 transition-colors group">
+                    <td class="p-4">
+                        <input type="checkbox" class="h-4 w-4 rounded border-input text-primary focus:ring-ring token-checkbox"
+                            data-token="${t.token}" data-type="${t.token_type}"
+                            ${selectedTokens.has(t.token) ? 'checked' : ''}
+                            onchange="toggleToken('${t.token}')">
+                    </td>
+                    <td class="p-4 font-mono text-xs text-muted-foreground max-w-[200px] truncate" title="${t.token}">
+                        <div class="flex items-center gap-2">
+                            <span class="truncate">${t.token.substring(0, 24)}...</span>
+                            <button onclick="copyToken('${t.token.replace(/'/g,"\\'")}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-accent rounded">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent ${t.token_type==='ssoSuper'?'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400':'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'}">
+                            ${t.token_type === 'ssoSuper' ? 'Super' : 'Basic'}
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium transition-colors border-transparent ${statusColors[t.status] || 'bg-muted'}">
+                            ${t.status}
+                        </span>
+                    </td>
+                    <td class="p-4 font-mono text-xs">${t.remaining_queries === -1 ? '-' : t.remaining_queries}</td>
+                    <td class="p-4 font-mono text-xs">${t.heavy_remaining_queries === -1 ? '-' : t.heavy_remaining_queries}</td>
+                    <td class="p-4 text-xs text-muted-foreground">${t.created_time ? new Date(t.created_time).toLocaleDateString() : '-'}</td>
+                    <td class="p-4 text-right">
+                        <button onclick="deleteToken('${t.token}', '${t.token_type}')" class="p-2 hover:bg-destructive/10 text-destructive rounded transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            updateBatchActions();
+        };
+
+        const filterTokens = () => {
+            const query = $('searchInput').value.toLowerCase();
+            const type = $('filterType').value;
+            const status = $('filterStatus').value;
+
+            filteredTokens = allTokens.filter(t => {
+                const matchQuery = t.token.toLowerCase().includes(query);
+                const matchType = type === 'all' || t.token_type === type;
+                const matchStatus = status === 'all' || t.status === status.replace('-', ''); // Backend uses "RateLimited" vs UI "Rate-Limited"
+                return matchQuery && matchType && matchStatus;
+            });
+
+            // Reset selection if filtered out? For now clear all to be safe
+            selectedTokens.clear();
+            $('selectAll').checked = false;
+
+            renderTokens();
+        };
+
+        // Selection Logic
+        const toggleToken = (t) => {
+            selectedTokens.has(t) ? selectedTokens.delete(t) : selectedTokens.add(t);
+            updateBatchActions();
+        };
+        const toggleSelectAll = () => {
+            const all = $('selectAll').checked;
+            filteredTokens.forEach(t => all ? selectedTokens.add(t.token) : selectedTokens.delete(t.token));
+            document.querySelectorAll('.token-checkbox').forEach(c => c.checked = all);
+            updateBatchActions();
+        };
+        const updateBatchActions = () => {
+            const count = selectedTokens.size;
+            $('selectedCount').textContent = `${count} selected`;
+            const ba = $('batchActions');
+            if (count > 0) {
+                ba.classList.remove('hidden');
+                ba.classList.add('flex');
+            } else {
+                ba.classList.add('hidden');
+                ba.classList.remove('flex');
+            }
+        };
+
+        // Modals
+        const openAddModal = () => {
+            const m = $('addModal');
+            m.classList.remove('hidden');
+            setTimeout(() => {
+                m.classList.remove('opacity-0');
+                $('addModalContent').classList.remove('scale-95');
+                $('addModalContent').classList.add('scale-100');
+            }, 10);
+        };
+        const closeAddModal = () => {
+            const m = $('addModal');
+            m.classList.add('opacity-0');
+            $('addModalContent').classList.add('scale-95');
+            $('addModalContent').classList.remove('scale-100');
+            setTimeout(() => {
+                m.classList.add('hidden');
+                $('addTokenList').value = '';
+            }, 200);
+        };
+
+        const openAddCloudinaryModal = () => {
+            const m = $('addCloudinaryModal');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.remove('opacity-0'), 10);
+        };
+        const closeAddCloudinaryModal = () => {
+            const m = $('addCloudinaryModal');
+            m.classList.add('opacity-0');
+            setTimeout(() => {
+                m.classList.add('hidden');
+                $('addCloudinaryAccountList').value = '';
+            }, 200);
+        };
+
+        // Actions
+        const submitAddTokens = async () => {
+            const type = $('addTokenType').value;
+            const tokens = $('addTokenList').value.split('\n').map(t => t.trim()).filter(t => t);
+            if (!tokens.length) return showToast('Please enter tokens', 'error');
+
+            const r = await apiRequest('/api/tokens/add', { method: 'POST', body: JSON.stringify({ tokens, token_type: type }) });
+            const d = await r.json();
+
+            if (d.success) {
+                showToast(`Added ${d.count} tokens`);
+                closeAddModal();
+                refreshTokens();
+            } else {
+                showToast(d.error || 'Failed to add tokens', 'error');
+            }
+        };
+
+        const deleteToken = async (token, type) => {
+            if (!confirm('Delete this token?')) return;
+            const r = await apiRequest('/api/tokens/delete', { method: 'POST', body: JSON.stringify({ tokens: [token], token_type: type }) });
+            const d = await r.json();
+            if (d.success) { showToast('Token deleted'); refreshTokens(); }
+            else showToast(d.error, 'error');
+        };
+
+        const batchDelete = async () => {
+            if (!confirm(`Delete ${selectedTokens.size} tokens?`)) return;
+            const toDelete = { sso: [], ssoSuper: [] };
+            // Need to map selected tokens to their types. Inefficient but works for small lists.
+            allTokens.filter(t => selectedTokens.has(t.token)).forEach(t => toDelete[t.token_type].push(t.token));
+
+            try {
+                await Promise.all([
+                    toDelete.sso.length && apiRequest('/api/tokens/delete', { method: 'POST', body: JSON.stringify({ tokens: toDelete.sso, token_type: 'sso' }) }),
+                    toDelete.ssoSuper.length && apiRequest('/api/tokens/delete', { method: 'POST', body: JSON.stringify({ tokens: toDelete.ssoSuper, token_type: 'ssoSuper' }) })
+                ]);
+                showToast('Batch delete successful');
+                selectedTokens.clear();
+                refreshTokens();
+            } catch (e) { showToast('Partial or full failure during batch delete', 'error'); }
+        };
+
+        const copyToken = (t) => {
+            navigator.clipboard.writeText(t);
+            showToast('Token copied to clipboard');
+        };
+
+        const refreshAllLimits = async () => {
+            showToast('Refreshing limits...', 'info');
+            const r = await apiRequest('/api/refresh-limits', { method: 'POST' });
+            const d = await r.json();
+            d.success ? showToast('Limits refreshed') : showToast(d.message, 'error');
+            refreshTokens();
+        };
+
+        // Settings & Cloudinary (Simplified for brevity, logic mirrors tokens)
+        const loadSettings = async () => {
+            const r = await apiRequest('/api/settings');
+            if(r) {
+                const d = await r.json();
+                if(d.success) {
+                    const g = d.data.global, k = d.data.grok;
+                    $('cfgAdminUser').value = g.admin_username || '';
+                    $('cfgLogLevel').value = g.log_level || 'INFO';
+                    $('cfgImageMode').value = g.image_mode || 'url';
+                    $('cfgBaseUrl').value = g.base_url || '';
+                    $('cfgImageCacheMaxSize').value = g.image_cache_max_size_mb || 500;
+                    $('cfgVideoCacheMaxSize').value = g.video_cache_max_size_mb || 1000;
+
+                    $('cfgApiKey').value = k.api_key || '';
+                    $('cfgStatsigId').value = k.x_statsig_id || '';
+                    $('cfgProxyUrl').value = k.proxy_url || '';
+                    $('cfgCacheProxyUrl').value = k.cache_proxy_url || '';
+                    $('cfgCfClearance').value = k.cf_clearance || '';
+                    $('cfgTemporary').value = k.temporary ? 'true' : 'false';
+                    $('cfgFilteredTags').value = k.filtered_tags || '';
+                    $('cfgStreamChunkTimeout').value = k.stream_chunk_timeout || 120;
+                    $('cfgStreamFirstResponseTimeout').value = k.stream_first_response_timeout || 30;
+                    $('cfgStreamTotalTimeout').value = k.stream_total_timeout || 600;
+                }
+            }
+        };
+
+        const saveGlobalSettings = async () => {
+            // Construct payloads similar to original code
+            const gc = {
+                admin_username: $('cfgAdminUser').value,
+                log_level: $('cfgLogLevel').value,
+                image_mode: $('cfgImageMode').value,
+                base_url: $('cfgBaseUrl').value,
+                image_cache_max_size_mb: parseInt($('cfgImageCacheMaxSize').value),
+                video_cache_max_size_mb: parseInt($('cfgVideoCacheMaxSize').value)
+            };
+            if ($('cfgAdminPass').value) gc.admin_password = $('cfgAdminPass').value;
+
+            const r = await apiRequest('/api/settings', { method: 'POST', body: JSON.stringify({ global_config: gc }) });
+            if (r) showToast('Global settings saved');
+        };
+
+        const saveGrokSettings = async () => {
+            const kc = {
+                api_key: $('cfgApiKey').value,
+                x_statsig_id: $('cfgStatsigId').value,
+                proxy_url: $('cfgProxyUrl').value,
+                cache_proxy_url: $('cfgCacheProxyUrl').value,
+                cf_clearance: $('cfgCfClearance').value,
+                temporary: $('cfgTemporary').value === 'true',
+                filtered_tags: $('cfgFilteredTags').value,
+                stream_chunk_timeout: parseInt($('cfgStreamChunkTimeout').value),
+                stream_first_response_timeout: parseInt($('cfgStreamFirstResponseTimeout').value),
+                stream_total_timeout: parseInt($('cfgStreamTotalTimeout').value)
+            };
+            const r = await apiRequest('/api/settings', { method: 'POST', body: JSON.stringify({ grok_config: kc }) });
+            if (r) showToast('Grok settings saved');
+        };
+
+        const loadCacheSize = async () => {
+            const r = await apiRequest('/api/cache/size');
+            if(r) {
+                const d = await r.json();
+                if(d.success) {
+                    $('dashImageCache').textContent = d.data.image_size;
+                    $('dashVideoCache').textContent = d.data.video_size;
+                    $('dashTotalCache').textContent = d.data.total_size;
+                }
+            }
+        };
+
+        const clearCache = async () => {
+            if(!confirm('Clear all cache?')) return;
+            const r = await apiRequest('/api/cache/clear', { method: 'POST' });
+            if(r) { showToast('Cache cleared'); loadCacheSize(); }
+        };
+
+        const loadCloudinaryAccounts = async () => {
+            const r = await apiRequest('/api/cloudinary/accounts');
+            if(r) {
+                const d = await r.json();
+                if(d.success) {
+                    const tb = $('cloudinaryTableBody');
+                    if(!d.data.length) { tb.innerHTML=''; $('cloudinaryEmptyState').classList.remove('hidden'); return; }
+                    $('cloudinaryEmptyState').classList.add('hidden');
+                    tb.innerHTML = d.data.map(a => `
+                        <tr class="border-b border-border hover:bg-muted/50">
+                            <td class="p-4">${a.cloud_name}</td>
+                            <td class="p-4 font-mono text-xs">${a.api_key}</td>
+                            <td class="p-4 text-right">
+                                <button onclick="deleteCloudinary('${a.api_key}')" class="text-destructive hover:underline">Delete</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        };
+
+        const submitAddCloudinaryAccount = async () => {
+            const urls = $('addCloudinaryAccountList').value.split('\n').filter(u=>u.trim());
+            const r = await apiRequest('/api/cloudinary/accounts/add', { method: 'POST', body: JSON.stringify({ urls }) });
+            if(r && (await r.json()).success) { showToast('Added Cloudinary accounts'); closeAddCloudinaryModal(); loadCloudinaryAccounts(); }
+            else showToast('Failed to add', 'error');
+        };
+
+        const deleteCloudinary = async (key) => {
+            if(!confirm('Delete account?')) return;
+            const r = await apiRequest('/api/cloudinary/accounts/delete', { method: 'POST', body: JSON.stringify({ api_keys: [key] }) });
+            if(r && (await r.json()).success) loadCloudinaryAccounts();
+        };
+
+        const loadStorageMode = async()=>{
+            try{
+                const r=await apiRequest('/api/storage/mode');
+                if(!r)return;
+                const d=await r.json();
+                if(d.success) $('storageModeText').textContent=d.data.mode;
+            }catch(e){}
+        };
+
+        // Init
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            checkAuth();
+            loadStorageMode();
+            switchTab('dashboard'); // Load initial view
+
+            // Auto refresh stats
+            setInterval(() => {
+                if(currentView === 'dashboard') loadStats();
+            }, 30000);
+        });
     </script>
 </body>
 </html>
