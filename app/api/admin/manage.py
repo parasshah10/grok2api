@@ -1,7 +1,7 @@
 """
-管理接口模块
+Management Interface Module
 
-提供Token管理功能，包括登录验证、Token增删查等操作。
+Provides Token management functions, including login verification, Token create/delete/query operations.
 """
 
 import secrets
@@ -21,10 +21,10 @@ from app.models.grok_models import TokenType
 from app.services.cloudinary import cloudinary_token_manager
 
 
-# 创建路由器
-router = APIRouter(tags=["管理"])
+# Create router
+router = APIRouter(tags=["Management"])
 
-# 常量定义
+# Constant Definition
 STATIC_DIR = Path(__file__).parents[2] / "template"
 TEMP_DIR = Path(__file__).parents[3] / "data" / "temp"
 IMAGE_CACHE_DIR = TEMP_DIR / "image"
@@ -33,85 +33,85 @@ SESSION_EXPIRE_HOURS = 24
 BYTES_PER_KB = 1024
 BYTES_PER_MB = 1024 * 1024
 
-# 简单的会话存储
+# Simple session storage
 _sessions: Dict[str, datetime] = {}
 
 
-# === 请求/响应模型 ===
+# === Request/Response Models ===
 
 class LoginRequest(BaseModel):
-    """登录请求"""
+    """Login Request"""
     username: str
     password: str
 
 
 class LoginResponse(BaseModel):
-    """登录响应"""
+    """Login Response"""
     success: bool
     token: Optional[str] = None
     message: str
 
 
 class AddTokensRequest(BaseModel):
-    """批量添加Token请求"""
+    """Batch Add Tokens Request"""
     tokens: List[str]
-    token_type: str  # "sso" 或 "ssoSuper"
+    token_type: str  # "sso" or "ssoSuper"
 
 
 class DeleteTokensRequest(BaseModel):
-    """批量删除Token请求"""
+    """Batch Delete Tokens Request"""
     tokens: List[str]
-    token_type: str  # "sso" 或 "ssoSuper"
+    token_type: str  # "sso" or "ssoSuper"
 
 
 class TokenInfo(BaseModel):
-    """Token信息"""
+    """Token Info"""
     token: str
     token_type: str
     created_time: Optional[int] = None
     remaining_queries: int
     heavy_remaining_queries: int
-    status: str  # "未使用"、"限流中"、"失效"、"正常"
+    status: str  # "Unused", "Rate-Limited", "Expired", "Active"
 
 
 class TokenListResponse(BaseModel):
-    """Token列表响应"""
+    """Token List Response"""
     success: bool
     data: List[TokenInfo]
     total: int
 
 
 class CloudinaryAccount(BaseModel):
-    """Cloudinary账户"""
+    """Cloudinary Account"""
     cloud_name: str
     api_key: str
     api_secret: str
 
 
 class AddCloudinaryAccountsRequest(BaseModel):
-    """添加Cloudinary账户请求"""
+    """Add Cloudinary Accounts Request"""
     urls: List[str]
 
 
 class DeleteCloudinaryAccountsRequest(BaseModel):
-    """删除Cloudinary账户请求"""
+    """Delete Cloudinary Accounts Request"""
     api_keys: List[str]
 
 
-# === 辅助函数 ===
+# === Helper Functions ===
 
 def validate_token_type(token_type_str: str) -> TokenType:
-    """验证并转换Token类型字符串为枚举"""
+    """Verify and convert token type string to enum"""
     if token_type_str not in ["sso", "ssoSuper"]:
         raise HTTPException(
             status_code=400,
-            detail={"error": "无效的Token类型，必须是 'sso' 或 'ssoSuper'", "code": "INVALID_TYPE"}
+            detail={"error": "Invalid token type, must be 'sso' or 'ssoSuper'", "code": "INVALID_TYPE"}
         )
     return TokenType.NORMAL if token_type_str == "sso" else TokenType.SUPER
 
 
 def parse_created_time(created_time) -> Optional[int]:
-    """解析创建时间，统一处理不同格式"""
+    """Parse created time, handle different formats uniformly"""
     if isinstance(created_time, str):
         return int(created_time) if created_time else None
     elif isinstance(created_time, int):
@@ -120,7 +120,7 @@ def parse_created_time(created_time) -> Optional[int]:
 
 
 def calculate_token_stats(tokens: Dict[str, Any], token_type: str) -> Dict[str, int]:
-    """计算Token统计信息"""
+    """Calculate Token statistics"""
     total = len(tokens)
     expired = sum(1 for t in tokens.values() if t.get("status") == "expired")
 
@@ -152,122 +152,122 @@ def calculate_token_stats(tokens: Dict[str, Any], token_type: str) -> Dict[str, 
 
 
 def verify_admin_session(authorization: Optional[str] = Header(None)) -> bool:
-    """验证管理员会话"""
+    """Verify admin session"""
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=401,
-            detail={"error": "未授权访问", "code": "UNAUTHORIZED"}
+            detail={"error": "Unauthorized access", "code": "UNAUTHORIZED"}
         )
     
-    token = authorization[7:]  # 移除 "Bearer " 前缀
+    token = authorization[7:]  # Remove "Bearer " prefix
     
-    # 检查token是否存在且未过期
+    # Check if token exists and is not expired
     if token not in _sessions:
         raise HTTPException(
             status_code=401,
-            detail={"error": "会话已过期或无效", "code": "SESSION_INVALID"}
+            detail={"error": "Session expired or invalid", "code": "SESSION_INVALID"}
         )
     
-    # 检查会话是否过期（24小时）
+    # Check if session expired (24 hours)
     if datetime.now() > _sessions[token]:
         del _sessions[token]
         raise HTTPException(
             status_code=401,
-            detail={"error": "会话已过期", "code": "SESSION_EXPIRED"}
+            detail={"error": "Session expired", "code": "SESSION_EXPIRED"}
         )
     
     return True
 
 
 def get_token_status(token_data: Dict[str, Any], token_type: str) -> str:
-    """获取Token状态"""
-    # 首先检查是否失效（来自 token.json 的 status 字段）
+    """Get Token status"""
+    # First check if expired (from status field in token.json)
     if token_data.get("status") == "expired":
-        return "失效"
+        return "Expired"
     
-    # 获取剩余次数
+    # Get remaining queries
     remaining_queries = token_data.get("remainingQueries", -1)
     heavy_remaining = token_data.get("heavyremainingQueries", -1)
     
-    # 根据token类型选择正确的字段
+    # Select correct field based on token type
     if token_type == "ssoSuper":
-        # Super token 可能使用 heavy 模型
+        # Super token may use heavy model
         relevant_remaining = max(remaining_queries, heavy_remaining)
     else:
-        # 普通token主要看 remaining_queries
+        # Normal token mainly looks at remaining_queries
         relevant_remaining = remaining_queries
     
     if relevant_remaining == -1:
-        return "未使用"
+        return "Unused"
     elif relevant_remaining == 0:
-        return "限流中"
+        return "Rate-Limited"
     else:
-        return "正常"
+        return "Active"
 
 
-# === 页面路由 ===
+# === Page Routes ===
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page():
-    """登录页面"""
+    """Login Page"""
     login_html = STATIC_DIR / "login.html"
     if login_html.exists():
         return login_html.read_text(encoding="utf-8")
-    raise HTTPException(status_code=404, detail="登录页面不存在")
+    raise HTTPException(status_code=404, detail="Login page not found")
 
 
 @router.get("/manage", response_class=HTMLResponse)
 async def manage_page():
-    """管理页面"""
+    """Management Page"""
     admin_html = STATIC_DIR / "admin.html"
     if admin_html.exists():
         return admin_html.read_text(encoding="utf-8")
-    raise HTTPException(status_code=404, detail="管理页面不存在")
+    raise HTTPException(status_code=404, detail="Management page not found")
 
 
-# === API端点 ===
+# === API Endpoints ===
 
 @router.post("/api/login", response_model=LoginResponse)
 async def admin_login(request: LoginRequest) -> LoginResponse:
     """
-    管理员登录
+    Admin Login
     
-    验证用户名和密码，成功后返回会话token。
+    Verify username and password, return session token upon success.
     """
     try:
-        logger.debug(f"[Admin] 管理员登录尝试 - 用户名: {request.username}")
+        logger.debug(f"[Admin] Admin login attempt - Username: {request.username}")
 
-        # 验证用户名和密码
+        # Verify username and password
         expected_username = setting.global_config.get("admin_username", "")
         expected_password = setting.global_config.get("admin_password", "")
 
         if request.username != expected_username or request.password != expected_password:
-            logger.warning(f"[Admin] 登录失败: 用户名或密码错误 - 用户名: {request.username}")
+            logger.warning(f"[Admin] Login failed: Username or password incorrect - Username: {request.username}")
             return LoginResponse(
                 success=False,
-                message="用户名或密码错误"
+                message="Username or password incorrect"
             )
 
-        # 生成会话token
+        # Generate session token
         session_token = secrets.token_urlsafe(32)
 
-        # 设置会话过期时间
+        # Set session expiration time
         expire_time = datetime.now() + timedelta(hours=SESSION_EXPIRE_HOURS)
         _sessions[session_token] = expire_time
 
-        logger.debug(f"[Admin] 管理员登录成功 - 用户名: {request.username}")
+        logger.debug(f"[Admin] Admin login successful - Username: {request.username}")
 
         return LoginResponse(
             success=True,
             token=session_token,
-            message="登录成功"
+            message="Login successful"
         )
 
     except Exception as e:
-        logger.error(f"[Admin] 登录处理异常 - 用户名: {request.username}, 错误: {str(e)}")
+        logger.error(f"[Admin] Login processing error - Username: {request.username}, Error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail={"error": f"登录失败: {str(e)}", "code": "LOGIN_ERROR"}
+            detail={"error": f"Login failed: {str(e)}", "code": "LOGIN_ERROR"}
         )
 
 
@@ -275,43 +275,43 @@ async def admin_login(request: LoginRequest) -> LoginResponse:
 async def admin_logout(_: bool = Depends(verify_admin_session),
                        authorization: Optional[str] = Header(None)) -> Dict[str, Any]:
     """
-    管理员登出
+    Admin Logout
     
-    清除会话token。
+    Clear session token.
     """
     try:
         if authorization and authorization.startswith("Bearer "):
             token = authorization[7:]
             if token in _sessions:
                 del _sessions[token]
-                logger.debug("[Admin] 管理员登出成功")
-                return {"success": True, "message": "登出成功"}
+                logger.debug("[Admin] Admin logout successful")
+                return {"success": True, "message": "Logout successful"}
 
-        logger.warning("[Admin] 登出失败: 无效或缺失的会话Token")
-        return {"success": False, "message": "无效的会话"}
+        logger.warning("[Admin] Logout failed: Invalid or missing session token")
+        return {"success": False, "message": "Invalid session"}
 
     except Exception as e:
-        logger.error(f"[Admin] 登出处理异常 - 错误: {str(e)}")
+        logger.error(f"[Admin] Logout processing error - Error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail={"error": f"登出失败: {str(e)}", "code": "LOGOUT_ERROR"}
+            detail={"error": f"Logout failed: {str(e)}", "code": "LOGOUT_ERROR"}
         )
 
 
 @router.get("/api/tokens", response_model=TokenListResponse)
 async def list_tokens(_: bool = Depends(verify_admin_session)) -> TokenListResponse:
     """
-    获取所有Token列表
+    Get Token List
     
-    返回系统中所有Token及其状态信息。
+    Return all Tokens and their status information in the system.
     """
     try:
-        logger.debug("[Admin] 开始获取Token列表")
+        logger.debug("[Admin] Start getting Token list")
 
         all_tokens_data = token_manager.get_tokens()
         token_list: List[TokenInfo] = []
 
-        # 处理普通Token
+        # Process Normal Tokens
         normal_tokens = all_tokens_data.get(TokenType.NORMAL.value, {})
         for token, data in normal_tokens.items():
             token_list.append(TokenInfo(
@@ -323,7 +323,7 @@ async def list_tokens(_: bool = Depends(verify_admin_session)) -> TokenListRespo
                 status=get_token_status(data, "sso")
             ))
 
-        # 处理Super Token
+        # Process Super Tokens
         super_tokens = all_tokens_data.get(TokenType.SUPER.value, {})
         for token, data in super_tokens.items():
             token_list.append(TokenInfo(
@@ -339,7 +339,7 @@ async def list_tokens(_: bool = Depends(verify_admin_session)) -> TokenListRespo
         super_count = len(super_tokens)
         total_count = len(token_list)
 
-        logger.debug(f"[Admin] Token列表获取成功 - 普通Token: {normal_count}, Super Token: {super_count}, 总计: {total_count}")
+        logger.debug(f"[Admin] Token list retrieved successfully - Normal Tokens: {normal_count}, Super Tokens: {super_count}, Total: {total_count}")
 
         return TokenListResponse(
             success=True,
@@ -348,10 +348,10 @@ async def list_tokens(_: bool = Depends(verify_admin_session)) -> TokenListRespo
         )
 
     except Exception as e:
-        logger.error(f"[Admin] 获取Token列表异常 - 错误: {str(e)}")
+        logger.error(f"[Admin] Get Token list error - Error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail={"error": f"获取Token列表失败: {str(e)}", "code": "LIST_ERROR"}
+            detail={"error": f"Failed to get Token list: {str(e)}", "code": "LIST_ERROR"}
         )
 
 
@@ -359,34 +359,34 @@ async def list_tokens(_: bool = Depends(verify_admin_session)) -> TokenListRespo
 async def add_tokens(request: AddTokensRequest,
                     _: bool = Depends(verify_admin_session)) -> Dict[str, Any]:
     """
-    批量添加Token
+    Batch Add Tokens
     
-    支持添加普通Token(sso)和Super Token(ssoSuper)。
+    Support adding Normal Tokens (sso) and Super Tokens (ssoSuper).
     """
     try:
-        logger.debug(f"[Admin] 批量添加Token - 类型: {request.token_type}, 数量: {len(request.tokens)}")
+        logger.debug(f"[Admin] Batch add Tokens - Type: {request.token_type}, Count: {len(request.tokens)}")
 
-        # 验证并转换token类型
+        # Verify and convert token type
         token_type = validate_token_type(request.token_type)
 
-        # 添加Token
+        # Add Tokens
         await token_manager.add_token(request.tokens, token_type)
 
-        logger.debug(f"[Admin] Token添加成功 - 类型: {request.token_type}, 数量: {len(request.tokens)}")
+        logger.debug(f"[Admin] Tokens added successfully - Type: {request.token_type}, Count: {len(request.tokens)}")
 
         return {
             "success": True,
-            "message": f"成功添加 {len(request.tokens)} 个Token",
+            "message": f"Successfully added {len(request.tokens)} Tokens",
             "count": len(request.tokens)
         }
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"[Admin] Token添加异常 - 类型: {request.token_type}, 数量: {len(request.tokens)}, 错误: {str(e)}")
+        logger.error(f"[Admin] Token add error - Type: {request.token_type}, Count: {len(request.tokens)}, Error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail={"error": f"添加Token失败: {str(e)}", "code": "ADD_ERROR"}
+            detail={"error": f"Failed to add Tokens: {str(e)}", "code": "ADD_ERROR"}
         )
 
 
@@ -394,34 +394,34 @@ async def add_tokens(request: AddTokensRequest,
 async def delete_tokens(request: DeleteTokensRequest,
                        _: bool = Depends(verify_admin_session)) -> Dict[str, Any]:
     """
-    批量删除Token
+    Batch Delete Tokens
     
-    支持删除普通Token(sso)和Super Token(ssoSuper)。
+    Support deleting Normal Tokens (sso) and Super Tokens (ssoSuper).
     """
     try:
-        logger.debug(f"[Admin] 批量删除Token - 类型: {request.token_type}, 数量: {len(request.tokens)}")
+        logger.debug(f"[Admin] Batch delete Tokens - Type: {request.token_type}, Count: {len(request.tokens)}")
 
-        # 验证并转换token类型
+        # Verify and convert token type
         token_type = validate_token_type(request.token_type)
 
-        # 删除Token
+        # Delete Tokens
         await token_manager.delete_token(request.tokens, token_type)
 
-        logger.debug(f"[Admin] Token删除成功 - 类型: {request.token_type}, 数量: {len(request.tokens)}")
+        logger.debug(f"[Admin] Tokens deleted successfully - Type: {request.token_type}, Count: {len(request.tokens)}")
 
         return {
             "success": True,
-            "message": f"成功删除 {len(request.tokens)} 个Token",
+            "message": f"Successfully deleted {len(request.tokens)} Tokens",
             "count": len(request.tokens)
         }
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"[Admin] Token删除异常 - 类型: {request.token_type}, 数量: {len(request.tokens)}, 错误: {str(e)}")
+        logger.error(f"[Admin] Token delete error - Type: {request.token_type}, Count: {len(request.tokens)}, Error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail={"error": f"删除Token失败: {str(e)}", "code": "DELETE_ERROR"}
+            detail={"error": f"Failed to delete Tokens: {str(e)}", "code": "DELETE_ERROR"}
         )
 
 
@@ -458,9 +458,9 @@ async def refresh_all_token_limits(_: bool = Depends(verify_admin_session)):
  
 @router.get("/api/settings")
 async def get_settings(_: bool = Depends(verify_admin_session)) -> Dict[str, Any]:
-    """获取全局配置"""
+    """Get Global Settings"""
     try:
-        logger.debug("[Admin] 获取全局配置")
+        logger.debug("[Admin] Get global settings")
         return {
             "success": True,
             "data": {
@@ -469,18 +469,18 @@ async def get_settings(_: bool = Depends(verify_admin_session)) -> Dict[str, Any
             }
         }
     except Exception as e:
-        logger.error(f"[Admin] 获取配置失败: {str(e)}")
-        raise HTTPException(status_code=500, detail={"error": f"获取配置失败: {str(e)}", "code": "GET_SETTINGS_ERROR"})
+        logger.error(f"[Admin] Failed to get settings: {str(e)}")
+        raise HTTPException(status_code=500, detail={"error": f"Failed to get settings: {str(e)}", "code": "GET_SETTINGS_ERROR"})
 
 
 class UpdateSettingsRequest(BaseModel):
-    """更新配置请求"""
+    """Update Settings Request"""
     global_config: Optional[Dict[str, Any]] = None
     grok_config: Optional[Dict[str, Any]] = None
 
 
 class StreamTimeoutSettings(BaseModel):
-    """流式超时配置"""
+    """Stream Timeout Settings"""
     stream_chunk_timeout: int = 120
     stream_first_response_timeout: int = 30
     stream_total_timeout: int = 600
@@ -488,37 +488,37 @@ class StreamTimeoutSettings(BaseModel):
 
 @router.post("/api/settings")
 async def update_settings(request: UpdateSettingsRequest, _: bool = Depends(verify_admin_session)) -> Dict[str, Any]:
-    """更新全局配置"""
+    """Update Global Settings"""
     try:
-        logger.debug("[Admin] 更新全局配置")
+        logger.debug("[Admin] Update global settings")
 
-        # 使用ConfigManager的save方法（支持存储抽象层）
+        # Use ConfigManager's save method (supports storage abstraction layer)
         await setting.save(
             global_config=request.global_config,
             grok_config=request.grok_config
         )
 
-        logger.debug("[Admin] 配置更新成功")
-        return {"success": True, "message": "配置更新成功"}
+        logger.debug("[Admin] Settings updated successfully")
+        return {"success": True, "message": "Settings updated successfully"}
     except Exception as e:
-        logger.error(f"[Admin] 更新配置失败: {str(e)}")
-        raise HTTPException(status_code=500, detail={"error": f"更新配置失败: {str(e)}", "code": "UPDATE_SETTINGS_ERROR"})
+        logger.error(f"[Admin] Failed to update settings: {str(e)}")
+        raise HTTPException(status_code=500, detail={"error": f"Failed to update settings: {str(e)}", "code": "UPDATE_SETTINGS_ERROR"})
 
 
 def _calculate_dir_size(directory: Path) -> int:
-    """计算目录中所有文件的大小（字节）"""
+    """Calculate total size of files in directory (bytes)"""
     total_size = 0
     for file_path in directory.iterdir():
         if file_path.is_file():
             try:
                 total_size += file_path.stat().st_size
             except Exception as e:
-                logger.warning(f"[Admin] 无法获取文件大小: {file_path.name}, 错误: {str(e)}")
+                logger.warning(f"[Admin] Cannot get file size: {file_path.name}, Error: {str(e)}")
     return total_size
 
 
 def _format_size(size_bytes: int) -> str:
-    """格式化字节大小为可读字符串"""
+    """Format bytes size to readable string"""
     size_mb = size_bytes / BYTES_PER_MB
     if size_mb < 1:
         size_kb = size_bytes / BYTES_PER_KB
@@ -528,24 +528,24 @@ def _format_size(size_bytes: int) -> str:
 
 @router.get("/api/cache/size")
 async def get_cache_size(_: bool = Depends(verify_admin_session)) -> Dict[str, Any]:
-    """获取缓存大小"""
+    """Get Cache Size"""
     try:
-        logger.debug("[Admin] 开始获取缓存大小")
+        logger.debug("[Admin] Start getting cache size")
 
-        # 计算图片缓存大小
+        # Calculate image cache size
         image_size = 0
         if IMAGE_CACHE_DIR.exists():
             image_size = _calculate_dir_size(IMAGE_CACHE_DIR)
         
-        # 计算视频缓存大小
+        # Calculate video cache size
         video_size = 0
         if VIDEO_CACHE_DIR.exists():
             video_size = _calculate_dir_size(VIDEO_CACHE_DIR)
         
-        # 总大小
+        # Total size
         total_size = image_size + video_size
 
-        logger.debug(f"[Admin] 缓存大小获取完成 - 图片: {_format_size(image_size)}, 视频: {_format_size(video_size)}, 总计: {_format_size(total_size)}")
+        logger.debug(f"[Admin] Cache size retrieved - Images: {_format_size(image_size)}, Videos: {_format_size(video_size)}, Total: {_format_size(total_size)}")
         
         return {
             "success": True,
@@ -560,53 +560,53 @@ async def get_cache_size(_: bool = Depends(verify_admin_session)) -> Dict[str, A
         }
 
     except Exception as e:
-        logger.error(f"[Admin] 获取缓存大小异常 - 错误: {str(e)}")
+        logger.error(f"[Admin] Get cache size exception - Error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail={"error": f"获取缓存大小失败: {str(e)}", "code": "CACHE_SIZE_ERROR"}
+            detail={"error": f"Failed to get cache size: {str(e)}", "code": "CACHE_SIZE_ERROR"}
         )
 
 
 @router.post("/api/cache/clear")
 async def clear_cache(_: bool = Depends(verify_admin_session)) -> Dict[str, Any]:
-    """清理缓存
+    """Clear Cache
 
-    删除所有临时文件"""
+    Delete all temporary files"""
     try:
-        logger.debug("[Admin] 开始清理缓存")
+        logger.debug("[Admin] Start clearing cache")
 
         deleted_count = 0
         image_count = 0
         video_count = 0
 
-        # 清理图片缓存
+        # Clear image cache
         if IMAGE_CACHE_DIR.exists():
             for file_path in IMAGE_CACHE_DIR.iterdir():
                 if file_path.is_file():
                     try:
                         file_path.unlink()
                         image_count += 1
-                        logger.debug(f"[Admin] 删除图片缓存: {file_path.name}")
+                        logger.debug(f"[Admin] Deleted image cache: {file_path.name}")
                     except Exception as e:
-                        logger.error(f"[Admin] 删除图片缓存失败: {file_path.name}, 错误: {str(e)}")
+                        logger.error(f"[Admin] Failed to delete image cache: {file_path.name}, Error: {str(e)}")
 
-        # 清理视频缓存
+        # Clear video cache
         if VIDEO_CACHE_DIR.exists():
             for file_path in VIDEO_CACHE_DIR.iterdir():
                 if file_path.is_file():
                     try:
                         file_path.unlink()
                         video_count += 1
-                        logger.debug(f"[Admin] 删除视频缓存: {file_path.name}")
+                        logger.debug(f"[Admin] Deleted video cache: {file_path.name}")
                     except Exception as e:
-                        logger.error(f"[Admin] 删除视频缓存失败: {file_path.name}, 错误: {str(e)}")
+                        logger.error(f"[Admin] Failed to delete video cache: {file_path.name}, Error: {str(e)}")
 
         deleted_count = image_count + video_count
-        logger.debug(f"[Admin] 缓存清理完成 - 图片: {image_count}, 视频: {video_count}, 总计: {deleted_count}")
+        logger.debug(f"[Admin] Cache clearing complete - Images: {image_count}, Videos: {video_count}, Total: {deleted_count}")
 
         return {
             "success": True,
-            "message": f"成功清理缓存，删除图片 {image_count} 个，视频 {video_count} 个，共 {deleted_count} 个文件",
+            "message": f"Successfully cleared cache, deleted {image_count} images, {video_count} videos, total {deleted_count} files",
             "data": {
                 "deleted_count": deleted_count,
                 "image_count": image_count,
@@ -615,39 +615,39 @@ async def clear_cache(_: bool = Depends(verify_admin_session)) -> Dict[str, Any]
         }
 
     except Exception as e:
-        logger.error(f"[Admin] 清理缓存异常 - 错误: {str(e)}")
+        logger.error(f"[Admin] Cache clear exception - Error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail={"error": f"清理缓存失败: {str(e)}", "code": "CACHE_CLEAR_ERROR"}
+            detail={"error": f"Failed to clear cache: {str(e)}", "code": "CACHE_CLEAR_ERROR"}
         )
 
 
 @router.post("/api/cache/clear/images")
 async def clear_image_cache(_: bool = Depends(verify_admin_session)) -> Dict[str, Any]:
-    """清理图片缓存
+    """Clear Image Cache
 
-    仅删除图片缓存文件"""
+    Only delete image cache files"""
     try:
-        logger.debug("[Admin] 开始清理图片缓存")
+        logger.debug("[Admin] Start clearing image cache")
 
         deleted_count = 0
 
-        # 清理图片缓存
+        # Clear image cache
         if IMAGE_CACHE_DIR.exists():
             for file_path in IMAGE_CACHE_DIR.iterdir():
                 if file_path.is_file():
                     try:
                         file_path.unlink()
                         deleted_count += 1
-                        logger.debug(f"[Admin] 删除图片缓存: {file_path.name}")
+                        logger.debug(f"[Admin] Deleted image cache: {file_path.name}")
                     except Exception as e:
-                        logger.error(f"[Admin] 删除图片缓存失败: {file_path.name}, 错误: {str(e)}")
+                        logger.error(f"[Admin] Failed to delete image cache: {file_path.name}, Error: {str(e)}")
 
-        logger.debug(f"[Admin] 图片缓存清理完成 - 删除 {deleted_count} 个文件")
+        logger.debug(f"[Admin] Image cache clearing complete - Deleted {deleted_count} files")
 
         return {
             "success": True,
-            "message": f"成功清理图片缓存，删除 {deleted_count} 个文件",
+            "message": f"Successfully cleared image cache, deleted {deleted_count} files",
             "data": {
                 "deleted_count": deleted_count,
                 "type": "images"
@@ -655,39 +655,39 @@ async def clear_image_cache(_: bool = Depends(verify_admin_session)) -> Dict[str
         }
 
     except Exception as e:
-        logger.error(f"[Admin] 清理图片缓存异常 - 错误: {str(e)}")
+        logger.error(f"[Admin] Clear image cache exception - Error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail={"error": f"清理图片缓存失败: {str(e)}", "code": "IMAGE_CACHE_CLEAR_ERROR"}
+            detail={"error": f"Failed to clear image cache: {str(e)}", "code": "IMAGE_CACHE_CLEAR_ERROR"}
         )
 
 
 @router.post("/api/cache/clear/videos")
 async def clear_video_cache(_: bool = Depends(verify_admin_session)) -> Dict[str, Any]:
-    """清理视频缓存
+    """Clear Video Cache
 
-    仅删除视频缓存文件"""
+    Only delete video cache files"""
     try:
-        logger.debug("[Admin] 开始清理视频缓存")
+        logger.debug("[Admin] Start clearing video cache")
 
         deleted_count = 0
 
-        # 清理视频缓存
+        # Clear video cache
         if VIDEO_CACHE_DIR.exists():
             for file_path in VIDEO_CACHE_DIR.iterdir():
                 if file_path.is_file():
                     try:
                         file_path.unlink()
                         deleted_count += 1
-                        logger.debug(f"[Admin] 删除视频缓存: {file_path.name}")
+                        logger.debug(f"[Admin] Deleted video cache: {file_path.name}")
                     except Exception as e:
-                        logger.error(f"[Admin] 删除视频缓存失败: {file_path.name}, 错误: {str(e)}")
+                        logger.error(f"[Admin] Failed to delete video cache: {file_path.name}, Error: {str(e)}")
 
-        logger.debug(f"[Admin] 视频缓存清理完成 - 删除 {deleted_count} 个文件")
+        logger.debug(f"[Admin] Video cache clearing complete - Deleted {deleted_count} files")
 
         return {
             "success": True,
-            "message": f"成功清理视频缓存，删除 {deleted_count} 个文件",
+            "message": f"Successfully cleared video cache, deleted {deleted_count} files",
             "data": {
                 "deleted_count": deleted_count,
                 "type": "videos"
@@ -695,30 +695,30 @@ async def clear_video_cache(_: bool = Depends(verify_admin_session)) -> Dict[str
         }
 
     except Exception as e:
-        logger.error(f"[Admin] 清理视频缓存异常 - 错误: {str(e)}")
+        logger.error(f"[Admin] Clear video cache exception - Error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail={"error": f"清理视频缓存失败: {str(e)}", "code": "VIDEO_CACHE_CLEAR_ERROR"}
+            detail={"error": f"Failed to clear video cache: {str(e)}", "code": "VIDEO_CACHE_CLEAR_ERROR"}
         )
 
 
 @router.get("/api/stats")
 async def get_stats(_: bool = Depends(verify_admin_session)) -> Dict[str, Any]:
     """
-    获取统计信息
+    Get Stats
 
-    返回Token的统计数据。
+    Return Token statistics.
     """
     try:
-        logger.debug("[Admin] 开始获取统计信息")
+        logger.debug("[Admin] Start getting stats")
 
         all_tokens_data = token_manager.get_tokens()
 
-        # 统计普通Token
+        # Stats for Normal Tokens
         normal_tokens = all_tokens_data.get(TokenType.NORMAL.value, {})
         normal_stats = calculate_token_stats(normal_tokens, "normal")
 
-        # 统计Super Token
+        # Stats for Super Tokens
         super_tokens = all_tokens_data.get(TokenType.SUPER.value, {})
         super_stats = calculate_token_stats(super_tokens, "super")
 
@@ -733,26 +733,26 @@ async def get_stats(_: bool = Depends(verify_admin_session)) -> Dict[str, Any]:
             }
         }
 
-        logger.debug(f"[Admin] 统计信息获取成功 - 普通Token: {normal_stats['total']}, Super Token: {super_stats['total']}, 总计: {total_count}")
+        logger.debug(f"[Admin] Stats retrieved successfully - Normal Tokens: {normal_stats['total']}, Super Tokens: {super_stats['total']}, Total: {total_count}")
         return stats
 
     except Exception as e:
-        logger.error(f"[Admin] 获取统计信息异常 - 错误: {str(e)}")
+        logger.error(f"[Admin] Get stats exception - Error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail={"error": f"获取统计信息失败: {str(e)}", "code": "STATS_ERROR"}
+            detail={"error": f"Failed to get stats: {str(e)}", "code": "STATS_ERROR"}
         )
 
 
 @router.get("/api/storage/mode")
 async def get_storage_mode(_: bool = Depends(verify_admin_session)) -> Dict[str, Any]:
     """
-    获取当前存储模式
+    Get Current Storage Mode
 
-    返回当前的存储模式（file/mysql/redis）。
+    Returns current storage mode (file/mysql/redis).
     """
     try:
-        logger.debug("[Admin] 获取存储模式")
+        logger.debug("[Admin] Get storage mode")
 
         import os
         storage_mode = os.getenv("STORAGE_MODE", "file").upper()
@@ -765,22 +765,22 @@ async def get_storage_mode(_: bool = Depends(verify_admin_session)) -> Dict[str,
         }
 
     except Exception as e:
-        logger.error(f"[Admin] 获取存储模式异常 - 错误: {str(e)}")
+        logger.error(f"[Admin] Get storage mode exception - Error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail={"error": f"获取存储模式失败: {str(e)}", "code": "STORAGE_MODE_ERROR"}
+            detail={"error": f"Failed to get storage mode: {str(e)}", "code": "STORAGE_MODE_ERROR"}
         )
 
 
 @router.get("/api/cloudinary/accounts")
 async def list_cloudinary_accounts(_: bool = Depends(verify_admin_session)):
-    """获取Cloudinary账户列表"""
+    """Get Cloudinary Accounts List"""
     try:
         accounts = cloudinary_token_manager.get_accounts()
         return {"success": True, "data": accounts}
     except Exception as e:
-        logger.error(f"[Admin] 获取Cloudinary账户列表异常 - 错误: {str(e)}")
-        raise HTTPException(status_code=500, detail={"error": f"获取Cloudinary账户列表失败: {str(e)}", "code": "LIST_CLOUDINARY_ACCOUNTS_ERROR"})
+        logger.error(f"[Admin] Get Cloudinary accounts list exception - Error: {str(e)}")
+        raise HTTPException(status_code=500, detail={"error": f"Failed to get Cloudinary accounts list: {str(e)}", "code": "LIST_CLOUDINARY_ACCOUNTS_ERROR"})
 
 
 def parse_cloudinary_url(cloudinary_url):
@@ -798,25 +798,25 @@ def parse_cloudinary_url(cloudinary_url):
 
 @router.post("/api/cloudinary/accounts/add")
 async def add_cloudinary_accounts(request: AddCloudinaryAccountsRequest, _: bool = Depends(verify_admin_session)):
-    """添加Cloudinary账户"""
+    """Add Cloudinary Accounts"""
     try:
         accounts = [parse_cloudinary_url(url) for url in request.urls]
         await cloudinary_token_manager.add_accounts(accounts)
-        return {"success": True, "message": "Cloudinary账户添加成功"}
+        return {"success": True, "message": "Cloudinary accounts added successfully"}
     except ValueError as e:
-        logger.error(f"[Admin] 添加Cloudinary账户失败: 无效的URL格式 - {str(e)}")
+        logger.error(f"[Admin] Failed to add Cloudinary accounts: Invalid URL format - {str(e)}")
         raise HTTPException(status_code=400, detail={"error": str(e), "code": "INVALID_CLOUDINARY_URL"})
     except Exception as e:
-        logger.error(f"[Admin] 添加Cloudinary账户异常 - 错误: {str(e)}")
-        raise HTTPException(status_code=500, detail={"error": f"添加Cloudinary账户失败: {str(e)}", "code": "ADD_CLOUDINARY_ACCOUNTS_ERROR"})
+        logger.error(f"[Admin] Add Cloudinary accounts exception - Error: {str(e)}")
+        raise HTTPException(status_code=500, detail={"error": f"Failed to add Cloudinary accounts: {str(e)}", "code": "ADD_CLOUDINARY_ACCOUNTS_ERROR"})
 
 
 @router.post("/api/cloudinary/accounts/delete")
 async def delete_cloudinary_accounts(request: DeleteCloudinaryAccountsRequest, _: bool = Depends(verify_admin_session)):
-    """删除Cloudinary账户"""
+    """Delete Cloudinary Accounts"""
     try:
         await cloudinary_token_manager.delete_accounts(request.api_keys)
-        return {"success": True, "message": "Cloudinary账户删除成功"}
+        return {"success": True, "message": "Cloudinary accounts deleted successfully"}
     except Exception as e:
-        logger.error(f"[Admin] 删除Cloudinary账户异常 - 错误: {str(e)}")
-        raise HTTPException(status_code=500, detail={"error": f"删除Cloudinary账户失败: {str(e)}", "code": "DELETE_CLOUDINARY_ACCOUNTS_ERROR"})
+        logger.error(f"[Admin] Delete Cloudinary accounts exception - Error: {str(e)}")
+        raise HTTPException(status_code=500, detail={"error": f"Failed to delete Cloudinary accounts: {str(e)}", "code": "DELETE_CLOUDINARY_ACCOUNTS_ERROR"})

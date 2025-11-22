@@ -1,9 +1,9 @@
-# 构建阶段
+# Build Stage
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
 
-# 安装依赖到独立目录
+# Install dependencies to independent directory
 COPY requirements.txt .
 RUN pip install --no-cache-dir --only-binary=:all: --prefix=/install -r requirements.txt && \
     find /install -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true && \
@@ -14,12 +14,12 @@ RUN pip install --no-cache-dir --only-binary=:all: --prefix=/install -r requirem
     find /install -type f -name "*.pyo" -delete && \
     find /install -name "*.so" -exec strip --strip-unneeded {} \; 2>/dev/null || true
 
-# 运行阶段 - 使用最小镜像
+# Runtime Stage - Use minimal image
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# 清理基础镜像中的冗余文件
+# Clean up redundant files in base image
 RUN rm -rf /usr/share/doc/* \
     /usr/share/man/* \
     /usr/share/locale/* \
@@ -28,19 +28,19 @@ RUN rm -rf /usr/share/doc/* \
     /tmp/* \
     /var/tmp/*
 
-# 从构建阶段复制已安装的包
+# Copy installed packages from build stage
 COPY --from=builder /install /usr/local
 
-# 创建必要的目录和文件
+# Create necessary directories and files
 RUN mkdir -p /app/logs /app/data/temp/image /app/data/temp/video && \
     echo '{"ssoNormal": {}, "ssoSuper": {}}' > /app/data/token.json
 
-# 复制应用代码
+# Copy application code
 COPY app/ ./app/
 COPY main.py .
 COPY data/setting.toml ./data/
 
-# 删除 Python 字节码和缓存
+# Remove Python bytecode and cache
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 

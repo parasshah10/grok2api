@@ -1,4 +1,4 @@
-# Python 运行时和缓存文件
+# Python runtime and cache files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -12,7 +12,7 @@ build/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# 虚拟环境
+# Virtual environment
 venv/
 env/
 ENV/
@@ -22,7 +22,7 @@ pipenv/
 poetry.lock
 Pipfile.lock
 
-# IDE 和编辑器
+# IDE and Editor
 .vscode/
 .idea/
 *.swp
@@ -42,13 +42,13 @@ Pipfile.lock
 .gitattributes
 .gitmodules
 
-# Docker 相关
+# Docker related
 Dockerfile*
 docker-compose*.yml
 .dockerignore
 .docker/
 
-# 文档和说明
+# Documentation
 *.md
 !data/*.md
 README.md
@@ -57,7 +57,7 @@ LICENSE
 CHANGELOG*
 CONTRIBUTING*
 
-# 测试和质量检查
+# Tests and Quality Checks
 tests/
 test/
 *.pytest_cache/
@@ -75,21 +75,21 @@ coverage.xml
 .cache/
 nosetests.xml
 
-# 日志和运行时数据
+# Logs and runtime data
 logs/
 *.log
 *.log.*
 
-# 数据临时文件
+# Data temporary files
 data/temp/
 data/token.json
 
-# 数据库文件
+# Database files
 *.db
 *.sqlite
 *.sqlite3
 
-# 临时文件
+# Temporary files
 tmp/
 temp/
 *.tmp
@@ -108,7 +108,7 @@ azure-pipelines.yml
 .jenkins/
 Jenkinsfile
 
-# 环境变量和密钥
+# Environment variables and secrets
 .env
 .env.*
 *.key
@@ -116,7 +116,7 @@ Jenkinsfile
 *.crt
 secrets/
 
-# 媒体和大文件
+# Media and large files
 *.mp4
 *.avi
 *.mov
@@ -133,7 +133,7 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
-# 其他
+# Others
 *.pyc
 .Python
 .sass-cache/
