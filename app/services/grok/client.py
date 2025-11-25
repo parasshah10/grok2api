@@ -26,6 +26,33 @@ class GrokClient:
     """Grok API Client"""
 
     @staticmethod
+    def _is_data_url(url: str) -> bool:
+        """Check if URL is a base64 data URL"""
+        return url.strip().startswith("data:image") and ";base64," in url
+    
+    @staticmethod
+    def _decode_data_url(data_url: str) -> Tuple[bytes, str]:
+        """Decode base64 data URL to bytes and extract mime type"""
+        import re
+        
+        try:
+            # Split header and data
+            header, encoded = data_url.split(",", 1)
+            
+            # Extract mime type from header (e.g., "data:image/png;base64")
+            mime_match = re.search(r"data:(image/[a-zA-Z0-9-.+]+);base64", header)
+            mime_type = mime_match.group(1) if mime_match else "image/jpeg"
+            
+            # Decode base64
+            import base64
+            decoded_bytes = base64.b64decode(encoded)
+            
+            return decoded_bytes, mime_type
+        except Exception as e:
+            logger.error(f"[Client] Failed to decode data URL: {e}")
+            raise GrokApiException(f"Invalid data URL: {e}", "DATA_URL_DECODE_ERROR")
+
+    @staticmethod
     async def openai_to_grok(openai_request: dict):
         """Convert OpenAI request to Grok request and handle response"""
         model = openai_request["model"]
@@ -53,94 +80,131 @@ class GrokClient:
                 import aiohttp
                 
                 image_url = image_urls[0]
-                logger.info(f"[Client] 🎬 Starting video generation flow for image: {image_url}")
+            # Log start of video generation without exposing full data URLs
+            if GrokClient._is_data_url(image_url):
+                logger.info("[Client] 🎬 Starting video generation flow for image: <data URL>")
+            else:
+                logger.info(f"[Client] 🎬 Starting video generation flow for image: {image_url[:100]}...")
                 
-                # Download image to temp file
+                # Download or decode image to temp file
                 try:
-                    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(image_url, headers=headers) as resp:
-                            if resp.status == 200:
-                                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-                                    tmp.write(await resp.read())
-                                    tmp_path = tmp.name
+                    tmp_path = None
+                    
+                    # Check if it's a data URL or HTTP URL
+                    if GrokClient._is_data_url(image_url):
+                        logger.debug("[Client] Detected data URL, decoding base64...")
+                        image_bytes, mime_type = GrokClient._decode_data_url(image_url)
+                        
+                        # Determine file extension from mime type
+                        extension_map = {
+                            "image/jpeg": ".jpg",
+                            "image/png": ".png",
+                            "image/gif": ".gif",
+                            "image/webp": ".webp",
+                            "image/bmp": ".bmp"
+                        }
+                        suffix = extension_map.get(mime_type, ".jpg")
+                        
+                        # Write to temp file
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                            tmp.write(image_bytes)
+                            tmp_path = tmp.name
+                        logger.debug(f"[Client] ✅ Data URL decoded to: {tmp_path}")
+                        
+                    else:
+                        logger.debug(f"[Client] Detected HTTP URL, downloading from: {image_url[:100]}...")
+                        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(image_url, headers=headers) as resp:
+                                if resp.status == 200:
+                                    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+                                        tmp.write(await resp.read())
+                                        tmp_path = tmp.name
+                                    logger.debug(f"[Client] ✅ HTTP image downloaded to: {tmp_path}")
+                                else:
+                                    logger.error(f"[Client] Failed to download image: HTTP {resp.status}")
+                                    raise GrokApiException(f"Failed to download image: HTTP {resp.status}", "IMAGE_DOWNLOAD_ERROR")
+                    
+                    # Generate video with user's actual prompt
+                    if tmp_path:
+                        try:
+                            result = await video_generator.generate_video_from_image(
+                                image_path=tmp_path,
+                                prompt=content,  # Pass the user's actual text prompt!
+                                mode="normal",
+                                model_name=model_name
+                            )
+                            
+                            if result.get("success"):
+                                # Get video URL from result
+                                video_url_path = result.get("conversation_result", {}).get("data", {}).get("video_url")
                                 
-                                try:
-                                    # Generate video with user's actual prompt
-                                    result = await video_generator.generate_video_from_image(
-                                        image_path=tmp_path,
-                                        prompt=content,  # Pass the user's actual text prompt!
-                                        mode="normal",
-                                        model_name=model_name
-                                    )
+                                if video_url_path:
+                                    # Cache and upload to Cloudinary (matching original processor logic)
+                                    from app.services.grok.processer import OpenAIChatCompletionResponse, OpenAIChatCompletionChoice, OpenAIChatCompletionMessage
+                                    from app.services.grok.cache import video_cache_service
+                                    from app.services.cloudinary.client import cloudinary_client
+                                    import time
+                                    import uuid
                                     
-                                    if result.get("success"):
-                                        # Get video URL from result
-                                        video_url_path = result.get("conversation_result", {}).get("data", {}).get("video_url")
+                                    full_video_url = f"https://assets.grok.com/{video_url_path}"
+                                    logger.info(f"[Client] ✅ Video URL found: {full_video_url}")
+                                    
+                                    try:
+                                        # Get auth token for downloading
+                                        auth_token = token_manager.get_token(model_name)
                                         
-                                        if video_url_path:
-                                            # Cache and upload to Cloudinary (matching original processor logic)
-                                            from app.services.grok.processer import OpenAIChatCompletionResponse, OpenAIChatCompletionChoice, OpenAIChatCompletionMessage
-                                            from app.services.grok.cache import video_cache_service
-                                            from app.services.cloudinary.client import cloudinary_client
-                                            import time
-                                            import uuid
-                                            
-                                            full_video_url = f"https://assets.grok.com/{video_url_path}"
-                                            logger.info(f"[Client] ✅ Video URL found: {full_video_url}")
-                                            
-                                            try:
-                                                # Get auth token for downloading
-                                                auth_token = token_manager.get_token(model_name)
-                                                
-                                                # Download and cache video
-                                                logger.info(f"[Client] Attempting to cache video...")
-                                                cache_path = await video_cache_service.download_video(f"/{video_url_path}", auth_token)
-                                                
-                                                if cache_path:
-                                                    logger.info(f"[Client] ✅ Video cached at: {cache_path}")
-                                                    # Upload to Cloudinary
-                                                    cloudinary_url = await asyncio.to_thread(cloudinary_client.upload_video, str(cache_path))
-                                                    logger.info(f"[Client] ✅ Video uploaded to Cloudinary: {cloudinary_url}")
-                                                    content = f'<video src="{cloudinary_url}" controls="controls" width="500" height="300"></video>\n'
-                                                else:
-                                                    logger.warning(f"[Client] ⚠️  Video caching failed, using direct URL")
-                                                    content = f'<video src="{full_video_url}" controls="controls" width="500" height="300"></video>\n'
-                                            except Exception as cache_error:
-                                                logger.error(f"[Client] ❌ Error caching/uploading video: {cache_error}")
-                                                content = f'<video src="{full_video_url}" controls="controls" width="500" height="300"></video>\n'
-                                            
-                                            return OpenAIChatCompletionResponse(
-                                                id=f"chatcmpl-{uuid.uuid4()}",
-                                                object="chat.completion",
-                                                created=int(time.time()),
-                                                model=model,
-                                                choices=[OpenAIChatCompletionChoice(
-                                                    index=0,
-                                                    message=OpenAIChatCompletionMessage(
-                                                        role="assistant",
-                                                        content=content
-                                                    ),
-                                                    finish_reason="stop"
-                                                )],
-                                                usage=None
-                                            )
+                                        # Download and cache video
+                                        logger.info(f"[Client] Attempting to cache video...")
+                                        cache_path = await video_cache_service.download_video(f"/{video_url_path}", auth_token)
+                                        
+                                        if cache_path:
+                                            logger.info(f"[Client] ✅ Video cached at: {cache_path}")
+                                            # Upload to Cloudinary
+                                            cloudinary_url = await asyncio.to_thread(cloudinary_client.upload_video, str(cache_path))
+                                            logger.info(f"[Client] ✅ Video uploaded to Cloudinary: {cloudinary_url}")
+                                            content = f'<video src="{cloudinary_url}" controls="controls" width="500" height="300"></video>\n'
                                         else:
-                                            logger.error(f"[Client] Video generation succeeded but no video URL in response")
-                                    else:
-                                        error_msg = result.get("error", "Unknown error")
-                                        logger.error(f"[Client] Video generation failed: {error_msg}")
-                                finally:
-                                    # Cleanup temp file
-                                    if os.path.exists(tmp_path):
-                                        os.remove(tmp_path)
-                                
-                                # If we got here with a successful download, we've already returned
-                                # If generation failed, raise an exception instead of falling through
-                                raise GrokApiException("Video generation failed", "VIDEO_GENERATION_ERROR")
+                                            logger.warning(f"[Client] ⚠️  Video caching failed, using direct URL")
+                                            content = f'<video src="{full_video_url}" controls="controls" width="500" height="300"></video>\n'
+                                    except Exception as cache_error:
+                                        logger.error(f"[Client] ❌ Error caching/uploading video: {cache_error}")
+                                        content = f'<video src="{full_video_url}" controls="controls" width="500" height="300"></video>\n'
+                                    
+                                    return OpenAIChatCompletionResponse(
+                                        id=f"chatcmpl-{uuid.uuid4()}",
+                                        object="chat.completion",
+                                        created=int(time.time()),
+                                        model=model,
+                                        choices=[OpenAIChatCompletionChoice(
+                                            index=0,
+                                            message=OpenAIChatCompletionMessage(
+                                                role="assistant",
+                                                content=content
+                                            ),
+                                            finish_reason="stop"
+                                        )],
+                                        usage=None
+                                    )
+                                else:
+                                    logger.error(f"[Client] Video generation succeeded but no video URL in response")
                             else:
-                                logger.error(f"[Client] Failed to download image: {resp.status}")
-                                raise GrokApiException(f"Failed to download image: {resp.status}", "IMAGE_DOWNLOAD_ERROR")
+                                error_msg = result.get("error", "Unknown error")
+                                logger.error(f"[Client] Video generation failed: {error_msg}")
+                        finally:
+                            # Cleanup temp file
+                            if tmp_path and os.path.exists(tmp_path):
+                                os.remove(tmp_path)
+                                logger.debug(f"[Client] Cleaned up temp file: {tmp_path}")
+                        
+                        # If we got here, video generation failed
+                        raise GrokApiException("Video generation failed", "VIDEO_GENERATION_ERROR")
+                    else:
+                        raise GrokApiException("Failed to prepare image for video generation", "IMAGE_PREPARATION_ERROR")
+                        
+                except GrokApiException:
+                    # Re-raise GrokApiExceptions as-is
+                    raise
                 except Exception as e:
                     logger.error(f"[Client] Error in video flow: {e}")
                     raise GrokApiException(f"Video generation error: {e}", "VIDEO_ERROR")
