@@ -80,13 +80,15 @@ class GrokClient:
                 import aiohttp
                 
                 image_url = image_urls[0]
-            # Log start of video generation without exposing full data URLs
-            if GrokClient._is_data_url(image_url):
-                logger.info("[Client] 🎬 Starting video generation flow for image: <data URL>")
-            else:
-                logger.info(f"[Client] 🎬 Starting video generation flow for image: {image_url[:100]}...")
+                
+                # Log start of video generation without exposing full data URLs
+                if GrokClient._is_data_url(image_url):
+                    logger.info("[Client] 🎬 Starting video generation flow for image: <data URL>")
+                else:
+                    logger.info(f"[Client] 🎬 Starting video generation flow for image: {image_url[:100]}...")
                 
                 # Download or decode image to temp file
+                # FIX: Unindented this block so it runs for both Data URLs and HTTP URLs
                 try:
                     tmp_path = None
                     
