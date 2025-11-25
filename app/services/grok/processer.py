@@ -434,23 +434,35 @@ class GrokResponseProcessor:
                         if thinking_finished and current_is_thinking:
                             continue
 
-                        # 检查 toolUsageCardId
-                        if grok_resp.get("toolUsageCardId"):
+                        # 检查 toolUsageCardId - ALWAYS stream tool usage to reduce TTFT
+                        if tool_usage_id := grok_resp.get("toolUsageCardId"):
+                            # Stream tool usage notification IMMEDIATELY to keep connection alive
+                            if not is_thinking:
+                                # Start thinking block for tool usage
+                                tool_notification = f"<think>\n[Tool: {tool_usage_id}]\n"
+                                yield make_chunk(tool_notification)
+                                timeout_manager.mark_chunk_received()
+                                chunk_index += 1
+                                is_thinking = True
+                            
                             if web_search := grok_resp.get("webSearchResults"):
-                                if current_is_thinking:
-                                    # 封装搜索结果
-                                    for result in web_search.get("results", []):
-                                        title = result.get("title", "")
-                                        url = result.get("url", "")
-                                        preview = result.get("preview", "")
-                                        preview_clean = preview.replace("\n", "") if isinstance(preview, str) else ""
-                                        token += f'\n- [{title}]({url} "{preview_clean}")'
-                                    token += "\n"
-                                else:
-                                    # 有 webSearchResults 但 isThinking 为 false
-                                    continue
+                                # Stream web search results IMMEDIATELY
+                                search_content = ""
+                                for result in web_search.get("results", []):
+                                    title = result.get("title", "")
+                                    url = result.get("url", "")
+                                    preview = result.get("preview", "")
+                                    preview_clean = preview.replace("\n", "") if isinstance(preview, str) else ""
+                                    search_content += f'\n- [{title}]({url} "{preview_clean}")'
+                                search_content += "\n"
+                                
+                                # Stream search results
+                                yield make_chunk(search_content)
+                                timeout_manager.mark_chunk_received()
+                                chunk_index += 1
+                                continue
                             else:
-                                # 没有 webSearchResults
+                                # Tool usage started but no results yet - still stream notification
                                 continue
 
                         if token:
