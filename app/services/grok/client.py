@@ -88,7 +88,6 @@ class GrokClient:
                     logger.info(f"[Client] 🎬 Starting video generation flow for image: {image_url[:100]}...")
                 
                 # Download or decode image to temp file
-                # FIX: Unindented this block so it runs for both Data URLs and HTTP URLs
                 try:
                     tmp_path = None
                     
@@ -173,21 +172,56 @@ class GrokClient:
                                         logger.error(f"[Client] ❌ Error caching/uploading video: {cache_error}")
                                         content = f'<video src="{full_video_url}" controls="controls" width="500" height="300"></video>\n'
                                     
-                                    return OpenAIChatCompletionResponse(
-                                        id=f"chatcmpl-{uuid.uuid4()}",
-                                        object="chat.completion",
-                                        created=int(time.time()),
-                                        model=model,
-                                        choices=[OpenAIChatCompletionChoice(
-                                            index=0,
-                                            message=OpenAIChatCompletionMessage(
-                                                role="assistant",
-                                                content=content
-                                            ),
-                                            finish_reason="stop"
-                                        )],
-                                        usage=None
-                                    )
+                                    # [FIX] Handle Streaming vs Non-Streaming
+                                    if stream:
+                                        async def stream_video_response():
+                                            chunk_data = {
+                                                "id": f"chatcmpl-{uuid.uuid4()}",
+                                                "object": "chat.completion.chunk",
+                                                "created": int(time.time()),
+                                                "model": model,
+                                                "choices": [{
+                                                    "index": 0,
+                                                    "delta": {
+                                                        "role": "assistant",
+                                                        "content": content
+                                                    },
+                                                    "finish_reason": None
+                                                }]
+                                            }
+                                            yield f"data: {json.dumps(chunk_data)}\n\n"
+                                            
+                                            finish_data = {
+                                                "id": f"chatcmpl-{uuid.uuid4()}",
+                                                "object": "chat.completion.chunk",
+                                                "created": int(time.time()),
+                                                "model": model,
+                                                "choices": [{
+                                                    "index": 0,
+                                                    "delta": {},
+                                                    "finish_reason": "stop"
+                                                }]
+                                            }
+                                            yield f"data: {json.dumps(finish_data)}\n\n"
+                                            yield "data: [DONE]\n\n"
+
+                                        return stream_video_response()
+                                    else:
+                                        return OpenAIChatCompletionResponse(
+                                            id=f"chatcmpl-{uuid.uuid4()}",
+                                            object="chat.completion",
+                                            created=int(time.time()),
+                                            model=model,
+                                            choices=[OpenAIChatCompletionChoice(
+                                                index=0,
+                                                message=OpenAIChatCompletionMessage(
+                                                    role="assistant",
+                                                    content=content
+                                                ),
+                                                finish_reason="stop"
+                                            )],
+                                            usage=None
+                                        )
                                 else:
                                     logger.error(f"[Client] Video generation succeeded but no video URL in response")
                             else:
