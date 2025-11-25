@@ -100,8 +100,11 @@ class GrokResponseProcessor:
                 # 提取响应数据
                 grok_resp = data.get("result", {}).get("response", {})
                 
+
+                
                 # 提取视频数据
                 if video_resp := grok_resp.get("streamingVideoGenerationResponse"):
+                    
                     if video_url := video_resp.get("videoUrl"):
                         logger.debug(f"[Processor] 检测到视频生成: {video_url}")
                         full_video_url = f"https://assets.grok.com/{video_url}"
@@ -111,12 +114,18 @@ class GrokResponseProcessor:
                             cache_path = await video_cache_service.download_video(f"/{video_url}", auth_token)
                             if cache_path:
                                 cloudinary_url = await asyncio.to_thread(cloudinary_client.upload_video, str(cache_path))
+                                logger.info(f"[Processor] ✅ Video uploaded to Cloudinary: {cloudinary_url}")
                                 content = f'<video src="{cloudinary_url}" controls="controls" width="500" height="300"></video>\n'
                             else:
+                                logger.warning(f"[Processor] ⚠️  Video caching failed, using direct URL")
                                 content = f'<video src="{full_video_url}" controls="controls" width="500" height="300"></video>\n'
                         except Exception as e:
-                            logger.warning(f"[Processor] 缓存视频失败: {e}")
+                            logger.error(f"[Processor] ❌ Error caching video: {type(e).__name__}: {e}")
+                            import traceback
+                            logger.error(traceback.format_exc())
                             content = f'<video src="{full_video_url}" controls="controls" width="500" height="300"></video>\n'
+                        
+                        logger.info(f"[Processor] Final video content: {content}")
                         
                         # 返回视频响应
                         result = OpenAIChatCompletionResponse(
@@ -137,6 +146,9 @@ class GrokResponseProcessor:
                         response_closed = True
                         response.close()
                         return result
+                    else:
+                        # Keep iterating - we haven't reached 100% yet
+                        continue
 
                 # 提取模型响应
                 model_response = grok_resp.get("modelResponse")
@@ -268,6 +280,15 @@ class GrokResponseProcessor:
                     return
 
                 logger.debug(f"[Processor] 接收到数据块: {len(chunk)} bytes")
+                
+                # DEBUG: Log RAW chunk data from Grok before any processing
+                if chunk:
+                    try:
+                        raw_decoded = chunk.decode("utf-8")
+                        logger.debug(f"[Processor] 🔴 RAW CHUNK FROM GROK: {raw_decoded}")
+                    except Exception as e:
+                        logger.debug(f"[Processor] Could not decode chunk: {e}")
+                
                 if not chunk:
                     continue
 
@@ -285,6 +306,7 @@ class GrokResponseProcessor:
                     # 提取响应数据
                     grok_resp = data.get("result", {}).get("response", {})
                     logger.debug(f"[Processor] 解析响应数据: {len(grok_resp)} 字段")
+                    
                     if not grok_resp:
                         continue
 
@@ -295,36 +317,51 @@ class GrokResponseProcessor:
 
                     # 提取视频数据
                     if video_resp := grok_resp.get("streamingVideoGenerationResponse"):
+                        logger.debug(f"[Processor] 🎬 Stream: Video response chunk: {json.dumps(video_resp, indent=2)}")
                         progress = video_resp.get("progress", 0)
                         
                         if progress > last_video_progress:
                             last_video_progress = progress
+                            logger.info(f"[Processor] 📊 Video generation progress: {progress}%")
                             
                             # 添加 <think> 标签
                             if not video_progress_started:
                                 content = f"<think>视频已生成{progress}%\n"
                                 video_progress_started = True
+                                logger.info(f"[Processor] Started video progress tracking")
                             elif progress < 100:
                                 content = f"视频已生成{progress}%\n"
                             else:
                                 # 进度100%时关闭 <think> 标签并立即处理视频
+                                logger.info(f"[Processor] ✅ Video generation complete (100%)")
                                 content = f"视频已生成{progress}%</think>\n"
                                 
                                 # 立即下载并缓存视频
                                 if v_url := video_resp.get("videoUrl"):
-                                    logger.debug(f"[Processor] 视频生成完成: {v_url}")
+                                    logger.info(f"[Processor] 🎥 Video URL found: {v_url}")
                                     full_video_url = f"https://assets.grok.com/{v_url}"
+                                    logger.info(f"[Processor] Full video URL: {full_video_url}")
                                     
                                     try:
+                                        logger.info(f"[Processor] Attempting to cache video...")
                                         cache_path = await video_cache_service.download_video(f"/{v_url}", auth_token)
                                         if cache_path:
+                                            logger.info(f"[Processor] ✅ Video cached at: {cache_path}")
                                             cloudinary_url = await asyncio.to_thread(cloudinary_client.upload_video, str(cache_path))
+                                            logger.info(f"[Processor] ✅ Video uploaded to Cloudinary: {cloudinary_url}")
                                             content += f'<video src="{cloudinary_url}" controls="controls"></video>\n'
                                         else:
+                                            logger.warning(f"[Processor] ⚠️  Video caching failed, using direct URL")
                                             content += f'<video src="{full_video_url}" controls="controls"></video>\n'
                                     except Exception as e:
-                                        logger.warning(f"[Processor] 缓存视频失败: {e}")
+                                        logger.error(f"[Processor] ❌ Error caching video: {type(e).__name__}: {e}")
+                                        import traceback
+                                        logger.error(traceback.format_exc())
                                         content += f'<video src="{full_video_url}" controls="controls"></video>\n'
+                                    
+                                    logger.info(f"[Processor] Final video content: {content}")
+                                else:
+                                    logger.error(f"[Processor] ❌ Progress is 100% but no videoUrl found!")
 
                             yield make_chunk(content)
                             timeout_manager.mark_chunk_received()
