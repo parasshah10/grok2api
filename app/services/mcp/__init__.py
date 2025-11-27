@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""MCP模块初始化"""
+"""MCP Module Initialization"""
 
 from app.services.mcp.server import mcp
 

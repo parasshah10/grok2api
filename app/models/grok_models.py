@@ -1,11 +1,11 @@
 from enum import Enum
 
-# 模型配置字典
+# Model Configuration Dictionary
 _MODEL_CONFIG = {
         "grok-3-fast": {
             "grok_model": ("grok-3", "MODEL_MODE_FAST"),
             "rate_limit_model": "grok-3",
-            "cost": {"type": "low_cost", "multiplier": 1, "description": "计1次调用"},
+            "cost": {"type": "low_cost", "multiplier": 1, "description": "Counts as 1 call"},
             "requires_super": False,
             "display_name": "Grok 3 Fast",
             "description": "Fast and efficient Grok 3 model",
@@ -18,7 +18,7 @@ _MODEL_CONFIG = {
         "grok-4-fast": {
             "grok_model": ("grok-4-mini-thinking-tahoe", "MODEL_MODE_GROK_4_MINI_THINKING"),
             "rate_limit_model": "grok-4-mini-thinking-tahoe",
-            "cost": {"type": "low_cost", "multiplier": 1, "description": "计1次调用"},
+            "cost": {"type": "low_cost", "multiplier": 1, "description": "Counts as 1 call"},
             "requires_super": False,
             "display_name": "Grok 4 Fast",
             "description": "Fast version of Grok 4 with mini thinking capabilities",
@@ -31,7 +31,7 @@ _MODEL_CONFIG = {
         "grok-4-fast-expert": {
             "grok_model": ("grok-4-mini-thinking-tahoe", "MODEL_MODE_EXPERT"),
             "rate_limit_model": "grok-4-mini-thinking-tahoe",
-            "cost": {"type": "high_cost", "multiplier": 4, "description": "计4次调用"},
+            "cost": {"type": "high_cost", "multiplier": 4, "description": "Counts as 4 calls"},
             "requires_super": False,
             "display_name": "Grok 4 Fast Expert",
             "description": "Expert mode of Grok 4 Fast with enhanced reasoning",
@@ -44,7 +44,7 @@ _MODEL_CONFIG = {
         "grok-4-expert": {
             "grok_model": ("grok-4", "MODEL_MODE_EXPERT"),
             "rate_limit_model": "grok-4",
-            "cost": {"type": "high_cost", "multiplier": 4, "description": "计4次调用"},
+            "cost": {"type": "high_cost", "multiplier": 4, "description": "Counts as 4 calls"},
             "requires_super": False,
             "display_name": "Grok 4 Expert",
             "description": "Full Grok 4 model with expert mode capabilities",
@@ -57,7 +57,7 @@ _MODEL_CONFIG = {
         "grok-4-heavy": {
             "grok_model": ("grok-4-heavy", "MODEL_MODE_HEAVY"),
             "rate_limit_model": "grok-4-heavy",
-            "cost": {"type": "independent", "multiplier": 1, "description": "独立计费，只有Super用户可用"},
+            "cost": {"type": "independent", "multiplier": 1, "description": "Independent billing, only available for Super users"},
             "requires_super": True,
             "display_name": "Grok 4 Heavy",
             "description": "Most powerful Grok 4 model with heavy computational capabilities. Requires Super Token for access.",
@@ -70,7 +70,7 @@ _MODEL_CONFIG = {
         "grok-4.1": {
             "grok_model": ("grok-4-1-non-thinking-w-tool", "MODEL_MODE_GROK_4_1"),
             "rate_limit_model": "grok-4-1-non-thinking-w-tool",
-            "cost": {"type": "low_cost", "multiplier": 1, "description": "计1次调用"},
+            "cost": {"type": "low_cost", "multiplier": 1, "description": "Counts as 1 call"},
             "requires_super": False,
             "display_name": "Grok 4.1",
             "description": "Latest Grok 4.1 model with tool capabilities",
@@ -83,7 +83,7 @@ _MODEL_CONFIG = {
         "grok-4.1-thinking": {
             "grok_model": ("grok-4-1-thinking-1108b", "MODEL_MODE_AUTO"),
             "rate_limit_model": "grok-4-1-thinking-1108b",
-            "cost": {"type": "high_cost", "multiplier": 1, "description": "计1次调用"},
+            "cost": {"type": "high_cost", "multiplier": 1, "description": "Counts as 1 call"},
             "requires_super": False,
             "display_name": "Grok 4.1 Thinking",
             "description": "Grok 4.1 model with advanced thinking and tool capabilities",
@@ -96,7 +96,7 @@ _MODEL_CONFIG = {
         "grok-imagine-0.9": {
             "grok_model": ("grok-3", "MODEL_MODE_FAST"),
             "rate_limit_model": "grok-3",
-            "cost": {"type": "low_cost", "multiplier": 1, "description": "计1次调用"},
+            "cost": {"type": "low_cost", "multiplier": 1, "description": "Counts as 1 call"},
             "requires_super": False,
             "display_name": "Grok Imagine 0.9",
             "description": "Video generation model powered by Grok",
@@ -110,13 +110,13 @@ _MODEL_CONFIG = {
     }
 
 class TokenType(Enum):
-    """Token类型枚举"""
-    NORMAL = "ssoNormal"  # 普通用户Token
-    SUPER = "ssoSuper"  # 超级用户Token
+    """Token Type Enum"""
+    NORMAL = "ssoNormal"  # Normal User Token
+    SUPER = "ssoSuper"  # Super User Token
 
 
 class Models(Enum):
-    """支持的模型枚举"""
+    """Supported Models Enum"""
     GROK_3_FAST = "grok-3-fast"
     GROK_4_1 = "grok-4.1"
     GROK_4_1_THINKING = "grok-4.1-thinking"
@@ -128,17 +128,17 @@ class Models(Enum):
 
     @classmethod
     def get_model_info(cls, model: str) -> dict:
-        """获取模型的完整配置信息"""
+        """Get complete configuration info for the model"""
         return _MODEL_CONFIG.get(model, {})
 
     @classmethod
     def is_valid_model(cls, model: str) -> bool:
-        """检查模型是否有效"""
+        """Check if model is valid"""
         return model in _MODEL_CONFIG
     
     @classmethod
     def to_grok(cls, model: str) -> tuple[str, str]:
-        """转换为Grok内部模型名和模式类型"""
+        """Convert to Grok internal model name and mode type"""
         config = _MODEL_CONFIG.get(model)
         if config:
             return config["grok_model"]
@@ -146,6 +146,6 @@ class Models(Enum):
     
     @classmethod
     def to_rate_limit(cls, model: str) -> str:
-        """转换为速率限制接口模型名"""
+        """Convert to rate limit interface model name"""
         config = _MODEL_CONFIG.get(model)
         return config["rate_limit_model"] if config else model

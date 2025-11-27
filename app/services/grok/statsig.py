@@ -1,4 +1,4 @@
-"""Grok 请求头管理模块"""
+"""Grok Request Header Management Module"""
 
 import uuid
 from typing import Dict
@@ -7,20 +7,20 @@ from app.core.config import setting
 
 
 def get_dynamic_headers(pathname: str = "/rest/app-chat/conversations/new") -> Dict[str, str]:
-    """获取请求头
+    """Get request headers
 
     Args:
-        pathname: 请求路径
+        pathname: Request path
 
     Returns:
-        请求头字典
+        Request headers dictionary
     """
-    # 获取配置的 x-statsig-id
+    # Get configured x-statsig-id
     statsig_id = setting.grok_config.get("x_statsig_id")
     if not statsig_id:
-        raise ValueError("配置文件中未设置 x_statsig_id")
+        raise ValueError("x_statsig_id is not set in configuration")
 
-    # 构建基础请求头
+    # Build base request headers
     headers = {
         "Accept": "*/*",
         "Accept-Language": "zh-CN,zh;q=0.9",
