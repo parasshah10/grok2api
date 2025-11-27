@@ -547,17 +547,48 @@
                     </svg>
                 </button>
             </div>
-            <div class="p-5 space-y-4">
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-muted-foreground">Account List (URL format, one per line)</label>
-                    <textarea
-                        id="addCloudinaryAccountList"
-                        rows="12"
-                        placeholder="cloudinary://<api_key>:<api_secret>@<cloud_name>"
-                        class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono resize-none"
-                    ></textarea>
+            
+            <div class="flex items-center px-5 pt-4 border-b border-border/50">
+                <nav class="flex space-x-6" aria-label="Tabs">
+                    <button onclick="switchModalTab('cloudinary', 'bulk')" id="tabCloudinaryBulk" class="border-b-2 border-primary text-primary py-2 text-sm font-medium transition-colors">Bulk Import</button>
+                    <button onclick="switchModalTab('cloudinary', 'single')" id="tabCloudinarySingle" class="border-b-2 border-transparent text-muted-foreground hover:text-foreground py-2 text-sm font-medium transition-colors">Single Entry</button>
+                </nav>
+            </div>
+
+            <div class="p-5">
+                <!-- Bulk Mode -->
+                <div id="panelCloudinaryBulk" class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-muted-foreground">Account List <span class="text-xs text-muted-foreground/70 ml-1">(one URL per line)</span></label>
+                        <textarea
+                            id="addCloudinaryAccountList"
+                            rows="8"
+                            placeholder="cloudinary://api_key:api_secret@cloud_name"
+                            class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono resize-none"
+                        ></textarea>
+                        <p class="text-[11px] text-muted-foreground">Format: cloudinary://&lt;api_key&gt;:&lt;api_secret&gt;@&lt;cloud_name&gt;</p>
+                    </div>
+                </div>
+
+                <!-- Single Mode -->
+                <div id="panelCloudinarySingle" class="hidden space-y-4">
+                    <div class="space-y-3">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-foreground">Cloud Name</label>
+                            <input id="addCloudinaryName" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. my-cloud-name">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-foreground">API Key</label>
+                            <input id="addCloudinaryKey" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. 123456789012345">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-foreground">API Secret</label>
+                            <input id="addCloudinarySecret" type="password" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring" placeholder="e.g. abcde_FGHIJ_klmno12345">
+                        </div>
+                    </div>
                 </div>
             </div>
+
             <div class="flex items-center justify-end gap-3 p-5 border-t border-border bg-muted/30">
                 <button
                     onclick="closeAddCloudinaryModal()"
@@ -587,24 +618,52 @@
                     </svg>
                 </button>
             </div>
-            <div class="p-5 space-y-4">
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-muted-foreground">Token Type</label>
+            
+            <div class="px-5 pt-5 pb-2">
+                <label class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Token Configuration</label>
+                <div class="space-y-2 mb-4">
+                    <label class="text-sm font-medium text-foreground">Token Type</label>
                     <select id="addTokenType" class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
                         <option value="sso">SSO</option>
                         <option value="ssoSuper">SuperSSO</option>
                     </select>
                 </div>
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-muted-foreground">Token List <span class="text-muted-foreground">(one per line)</span></label>
-                    <textarea
-                        id="addTokenList"
-                        rows="12"
-                        placeholder="Enter tokens, one per line"
-                        class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono resize-none"
-                    ></textarea>
+            </div>
+
+            <div class="flex items-center px-5 border-b border-border/50">
+                <nav class="flex space-x-6" aria-label="Tabs">
+                    <button onclick="switchModalTab('token', 'bulk')" id="tabTokenBulk" class="border-b-2 border-primary text-primary py-2 text-sm font-medium transition-colors">Bulk Import</button>
+                    <button onclick="switchModalTab('token', 'single')" id="tabTokenSingle" class="border-b-2 border-transparent text-muted-foreground hover:text-foreground py-2 text-sm font-medium transition-colors">Single Entry</button>
+                </nav>
+            </div>
+
+            <div class="p-5">
+                <!-- Bulk Mode -->
+                <div id="panelTokenBulk" class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-muted-foreground">Token List <span class="text-xs text-muted-foreground/70 ml-1">(one per line)</span></label>
+                        <textarea
+                            id="addTokenList"
+                            rows="8"
+                            placeholder="Enter tokens, one per line"
+                            class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono resize-none"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <!-- Single Mode -->
+                <div id="panelTokenSingle" class="hidden space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-foreground">Token Value</label>
+                        <input 
+                            id="addTokenSingleInput" 
+                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring font-mono" 
+                            placeholder="Paste token here"
+                        >
+                    </div>
                 </div>
             </div>
+
             <div class="flex items-center justify-end gap-3 p-5 border-t border-border bg-muted/30">
                 <button
                     onclick="closeAddModal()"
@@ -638,11 +697,48 @@
         updateBatchActions=()=>{const ba=$('batchActions'),sc=$('selectedCount'),c=selectedTokens.size;ba.classList[c>0?'add':'remove']('flex');ba.classList[c>0?'remove':'add']('hidden');c>0&&(sc.textContent=`${c} selected`);$('selectAll').checked=filteredTokens.length>0&&c===filteredTokens.length},
         filterTokens=()=>{const tf=$('filterType').value,sf=$('filterStatus').value;filteredTokens=allTokens.filter(t=>(tf==='all'||t.token_type===tf)&&(sf==='all'||t.status===sf.replace('-','')));selectedTokens.clear();renderTokens()},
         refreshTokens=async()=>{await loadTokens();await loadStats()},
-        openAddModal=()=>$('addModal').classList.remove('hidden'),
-        closeAddModal=()=>{$('addModal').classList.add('hidden');$('addTokenList').value=''},
+        switchModalTab=(type, tab)=>{
+            const modes = ['bulk', 'single'];
+            modes.forEach(m => {
+                const isSelf = m === tab;
+                const btn = $(`tab${type.charAt(0).toUpperCase() + type.slice(1)}${m.charAt(0).toUpperCase() + m.slice(1)}`);
+                const pnl = $(`panel${type.charAt(0).toUpperCase() + type.slice(1)}${m.charAt(0).toUpperCase() + m.slice(1)}`);
+                if(btn && pnl) {
+                    if(isSelf) {
+                        btn.classList.add('border-primary', 'text-primary');
+                        btn.classList.remove('border-transparent', 'text-muted-foreground');
+                        pnl.classList.remove('hidden');
+                    } else {
+                        btn.classList.remove('border-primary', 'text-primary');
+                        btn.classList.add('border-transparent', 'text-muted-foreground');
+                        pnl.classList.add('hidden');
+                    }
+                }
+            });
+        },
+        openAddModal=()=>{
+            $('addModal').classList.remove('hidden');
+            switchModalTab('token', 'bulk');
+        },
+        closeAddModal=()=>{
+            $('addModal').classList.add('hidden');
+            $('addTokenList').value='';
+            $('addTokenSingleInput').value='';
+        },
         deleteToken=async(t,tt)=>{if(!confirm('Are you sure you want to delete this token?'))return;try{const r=await apiRequest('/api/tokens/delete',{method:'POST',body:JSON.stringify({tokens:[t],token_type:tt})});if(!r)return;const d=await r.json();d.success?await refreshTokens():alert('Delete failed: '+(d.error||'Unknown error'))}catch(e){alert('Delete failed: '+e.message)}},
         batchDelete=async()=>{if(!selectedTokens.size||!confirm(`Are you sure you want to delete the selected ${selectedTokens.size} tokens? This action cannot be undone!`))return;const tbt={sso:[],ssoSuper:[]};document.querySelectorAll('.token-checkbox:checked').forEach(cb=>tbt[cb.dataset.type].push(cb.dataset.token));try{const ps=[];['sso','ssoSuper'].forEach(k=>tbt[k].length&&ps.push(apiRequest('/api/tokens/delete',{method:'POST',body:JSON.stringify({tokens:tbt[k],token_type:k})})));await Promise.all(ps);await refreshTokens()}catch(e){alert('Batch delete failed: '+e.message)}},
-        submitAddTokens=async()=>{const tt=$('addTokenType').value,tks=$('addTokenList').value.split('\n').map(t=>t.trim()).filter(t=>t);if(!tks.length)return alert('Please enter at least one token');try{const r=await apiRequest('/api/tokens/add',{method:'POST',body:JSON.stringify({tokens:tks,token_type:tt})});if(!r)return;const d=await r.json();d.success?(closeAddModal(),await refreshTokens()):alert('Add failed: '+(d.error||'Unknown error'))}catch(e){alert('Add failed: '+e.message)}},
+        submitAddTokens=async()=>{
+            const tt=$('addTokenType').value;
+            let tks=[];
+            if(!$('panelTokenBulk').classList.contains('hidden')) {
+                tks = $('addTokenList').value.split('\n').map(t=>t.trim()).filter(t=>t);
+            } else {
+                const val = $('addTokenSingleInput').value.trim();
+                if(val) tks.push(val);
+            }
+            if(!tks.length)return alert('Please enter at least one token');
+            try{const r=await apiRequest('/api/tokens/add',{method:'POST',body:JSON.stringify({tokens:tks,token_type:tt})});if(!r)return;const d=await r.json();d.success?(closeAddModal(),await refreshTokens()):alert('Add failed: '+(d.error||'Unknown error'))}catch(e){alert('Add failed: '+e.message)}
+        },
         copyToken=async(t,e)=>{e.stopPropagation();try{await navigator.clipboard.writeText(t);showToast('Token copied to clipboard','success')}catch(err){console.error('Copy failed:',err);showToast('Copy failed, please copy manually','error')}},
         refreshAllLimits=async()=>{const t=$("refresh-status");t.textContent="Refreshing...";try{const e=await apiRequest("/api/refresh-limits",{method:"POST"});if(!e)return;const s=await e.json();s.success?(showToast(s.message||"Rate limits refresh started.","success"),setTimeout(()=>{refreshTokens(),t.textContent=""},2e3)):(showToast(s.message||"Failed to start refresh.","error"),t.textContent="Error!")}catch(e){showToast("An error occurred while refreshing limits.","error"),t.textContent="Error!"}};
  
@@ -654,9 +750,33 @@
         loadSettings=async()=>{try{const r=await apiRequest('/api/settings');if(!r)return;const d=await r.json();if(d.success){const g=d.data.global,k=d.data.grok;$('cfgAdminUser').value=g.admin_username||'';$('cfgAdminPass').value='';$('cfgLogLevel').value=g.log_level||'DEBUG';$('cfgImageCacheMaxSize').value=g.image_cache_max_size_mb||500;$('cfgVideoCacheMaxSize').value=g.video_cache_max_size_mb||1000;$('cfgImageMode').value=g.image_mode||'url';$('cfgBaseUrl').value=g.base_url||'';$('cfgApiKey').value=k.api_key||'';$('cfgProxyUrl').value=k.proxy_url||'';$('cfgCacheProxyUrl').value=k.cache_proxy_url||'';$('cfgCfClearance').value=k.cf_clearance||'';$('cfgStatsigId').value=k.x_statsig_id||'';$('cfgFilteredTags').value=k.filtered_tags||'';$('cfgTemporary').value=k.temporary!==false?'true':'false';$('cfgStreamChunkTimeout').value=k.stream_chunk_timeout||120;$('cfgStreamFirstResponseTimeout').value=k.stream_first_response_timeout||30;$('cfgStreamTotalTimeout').value=k.stream_total_timeout||600;updateCacheProxyReadonly();await loadCacheSize()}}catch(e){console.error('Failed to load settings:',e);showToast('Failed to load settings','error')}},
         loadCloudinaryAccounts=async()=>{try{const r=await apiRequest('/api/cloudinary/accounts');if(!r)return;const d=await r.json();if(d.success){renderCloudinaryAccounts(d.data)}}catch(e){console.error('Failed to load Cloudinary accounts:',e)}},
         renderCloudinaryAccounts=(accounts)=>{const tb=$('cloudinaryTableBody'),es=$('cloudinaryEmptyState');if(!accounts.length){tb.innerHTML='';es.classList.remove('hidden');return}es.classList.add('hidden');tb.innerHTML=accounts.map(acc=>`<tr><td class="p-3">${acc.cloud_name}</td><td class="p-3">${acc.api_key}</td><td class="p-3 text-right"><button onclick="deleteCloudinaryAccount('${acc.api_key}')" class="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive h-7 w-7"><svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td></tr>`).join('')},
-        openAddCloudinaryModal=()=>$('addCloudinaryModal').classList.remove('hidden'),
-        closeAddCloudinaryModal=()=>{$('addCloudinaryAccountList').value='';$('addCloudinaryModal').classList.add('hidden')},
-        submitAddCloudinaryAccount=async()=>{const urls=$('addCloudinaryAccountList').value.split('\n').map(u=>u.trim()).filter(u=>u);if(!urls.length)return alert('Please enter at least one Cloudinary URL');try{const r=await apiRequest('/api/cloudinary/accounts/add',{method:'POST',body:JSON.stringify({urls:urls})});if(!r)return;const d=await r.json();d.success?(closeAddCloudinaryModal(),loadCloudinaryAccounts()):alert('Add failed: '+(d.error||'Unknown error'))}catch(e){alert('Add failed: '+e.message)}},
+        openAddCloudinaryModal=()=>{
+            $('addCloudinaryModal').classList.remove('hidden');
+            switchModalTab('cloudinary', 'bulk');
+        },
+        closeAddCloudinaryModal=()=>{
+            $('addCloudinaryAccountList').value='';
+            $('addCloudinaryName').value='';
+            $('addCloudinaryKey').value='';
+            $('addCloudinarySecret').value='';
+            $('addCloudinaryModal').classList.add('hidden');
+        },
+        submitAddCloudinaryAccount=async()=>{
+            let urls = [];
+            if(!$('panelCloudinaryBulk').classList.contains('hidden')) {
+                urls=$('addCloudinaryAccountList').value.split('\n').map(u=>u.trim()).filter(u=>u);
+            } else {
+                const name = $('addCloudinaryName').value.trim();
+                const key = $('addCloudinaryKey').value.trim();
+                const secret = $('addCloudinarySecret').value.trim();
+                if(name && key && secret) {
+                    urls.push(`cloudinary://${key}:${secret}@${name}`);
+                } else if (name || key || secret) {
+                    return alert('Please fill in all fields');
+                }
+            }
+            if(!urls.length)return alert('Please enter at least one Cloudinary account');
+            try{const r=await apiRequest('/api/cloudinary/accounts/add',{method:'POST',body:JSON.stringify({urls:urls})});if(!r)return;const d=await r.json();d.success?(closeAddCloudinaryModal(),loadCloudinaryAccounts()):alert('Add failed: '+(d.error||'Unknown error'))}catch(e){alert('Add failed: '+e.message)}},
         deleteCloudinaryAccount=async(apiKey)=>{if(!confirm('Are you sure you want to delete this Cloudinary account?'))return;try{const r=await apiRequest('/api/cloudinary/accounts/delete',{method:'POST',body:JSON.stringify({api_keys:[apiKey]})});if(!r)return;const d=await r.json();d.success?loadCloudinaryAccounts():alert('Delete failed: '+(d.error||'Unknown error'))}catch(e){alert('Delete failed: '+e.message)}},
         loadCacheSize=async()=>{try{const r=await apiRequest('/api/cache/size');if(!r)return;const d=await r.json();if(d.success){$('imageCacheSize').value=d.data.image_size||'0 MB';$('videoCacheSize').value=d.data.video_size||'0 MB';$('totalCacheSize').value=d.data.total_size||'0 MB'}}catch(e){console.error('Failed to load cache size:',e);$('imageCacheSize').value='0 MB';$('videoCacheSize').value='0 MB';$('totalCacheSize').value='0 MB'}},
         clearImageCache=async()=>{if(!confirm('Are you sure you want to clear the image cache? This will delete all cached image files!'))return;try{const r=await apiRequest('/api/cache/clear/images',{method:'POST'});if(!r)return;const d=await r.json();d.success?(showToast(`Image cache cleared, ${d.data.deleted_count||0} files deleted`,'success'),await loadCacheSize()):showToast('Clear failed: '+(d.error||'Unknown error'),'error')}catch(e){showToast('Clear failed: '+e.message,'error')}},
